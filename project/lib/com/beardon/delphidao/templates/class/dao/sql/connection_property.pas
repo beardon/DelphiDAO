@@ -7,8 +7,10 @@ type
   private
     const HOST = 'localhost';
     const PORT = 3306;
-    const USER = 'AppUse';
-    const PASSWORD = 'oldspice';
+//    const USER = 'AppUse';
+//    const PASSWORD = 'oldspice';
+    const USER = 'username';
+    const PASSWORD = 'password';
     const DATABASE = 'schema';
   public
     class function getHost: string; static;

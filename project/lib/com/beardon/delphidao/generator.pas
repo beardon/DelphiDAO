@@ -3,26 +3,34 @@ unit generator;
 interface
 
 uses
-  DBClient;
+  DBClient,
+  Generics.Collections;
 
 type
+  TRoutineParameter = record
+    direction: string;
+    varName: string;
+    sqlType: string;
+  end;
   TGenerator = class
   private
     class procedure init(path: string);
     class function doesTableContainPK(const tableName: string): Boolean;
     class procedure createDAOFactory(const dataset: TClientDataSet; const path: string);
-    class procedure generateDomainObjects(const dataset: TClientDataSet; const path: string);
+    class procedure generateDTOObjects(const dataset: TClientDataSet; const path: string);
     class procedure generateDAOExtObjects(const dataset: TClientDataSet; const path: string);
     class procedure generateDAOObjects(const dataSet: TClientDataSet; const path: string);
     class procedure generateIDAOObjects(const dataset: TClientDataSet; const path: string);
     class procedure generateStoredRoutines(const path: string);
     class function getFields(const tableName: string): TClientDataSet;
-    class function getClazzName(const tableName: string): string;
-    class function getDTOName(const tableName: string): string;
-    class function getVarName(const tableName: string): string;
-    class function getVarNameWithS(const tableName: string): string;
+    class function lowerCamelCase(const value: string): string;
+    class function upperCamelCase(const value: string): string;
+//    class function getVarNameWithS(const tableName: string): string;
     class function getDelphiType(const sqlType: string): string;
     class function getDelphiAsType(const sqlType: string): string;
+    class function fixReservedWords(const value: string): string;
+    class function getRoutineParameters(const createSQL: string; const isFunction: Boolean): TList<TRoutineParameter>;
+    class function getRoutineReturnType(const createSQL: string): string;
     class function concatLongString(const inStr: string; const multiline: Boolean): string;
   public
     class procedure generate(path: string); static;
@@ -31,6 +39,7 @@ type
 implementation
 
 uses
+  Classes,
   connection_property,
   query,
   query_executor,
@@ -56,11 +65,12 @@ begin
   qry.sql.Add('SHOW TABLES');
   ds := TQueryExecutor.execute(qry);
   qry.Free;
-  generateDomainObjects(ds, path);
+  generateDTOObjects(ds, path);
 	generateDAOObjects(ds, path);
 	generateDAOExtObjects(ds, path);
 	generateIDAOObjects(ds, path);
 	createDAOFactory(ds, path);
+  generateStoredRoutines(path);
   ds.Free;
 end;
 
@@ -119,7 +129,7 @@ begin
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.getDatabase).AsString;
-      tableClassName := getClazzName(tableName);
+      tableClassName := upperCamelCase(tableName);
       usesList := usesList + TAB + tableName + '_mysql_ext_dao,' + CRLF;
       functionDeclarations := functionDeclarations + TAB2 + 'class function get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
       implementationCode := implementationCode + 'class function TDAOFactory.get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
@@ -146,14 +156,13 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.generateDomainObjects(const dataset: TClientDataSet; const path: string);
+class procedure TGenerator.generateDTOObjects(const dataset: TClientDataSet; const path: string);
 var
   tableName, tableClassName,
   typeName, privateVars, publicConstants, publicProperties,
   thisField, thisType: string;
   template: TTemplate;
   ds: TClientDataSet;
-  hasPK: Boolean;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -165,14 +174,8 @@ begin
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.getDatabase).AsString;
       Write('Generating ' + '"' + path + '\class\dto\' + tableName + '.pas"...');
-      hasPK := doesTableContainPK(tableName);
-      tableClassName := getClazzName(tableName);
-      // is this really necessary? - AB
-      if (tableClassName[Length(tableClassName)] = 's') then
-      begin
-        tableClassName := Copy(tableClassName, 1, Length(tableClassName) - 1);
-      end;
-      template := TTemplate.Create(TEMPLATE_PATH + 'domain.tpl');
+      tableClassName := upperCamelCase(tableName);
+      template := TTemplate.Create(TEMPLATE_PATH + 'dto.tpl');
       template.setPair('unit_name', tableName);
       template.setPair('table_name', tableName);
       typeName := 'T' + tableClassName;
@@ -187,15 +190,8 @@ begin
       begin
         thisField := FieldByName('Field').AsString;
         thisType := getDelphiType(FieldByName('Type').AsString);
-        privateVars := privateVars + TAB2 + 'f' + thisField + ': ' + thisType + ';' + CRLF;
-        if (hasPK) then
-        begin
-          publicProperties := publicProperties + TAB2 + 'property ' + thisField + ': ' + thisType + ' read f' + thisField + ' write f' + thisField + ';' + CRLF;
-        end
-        else
-        begin
-          publicProperties := publicProperties + TAB2 + 'property ' + thisField + ': ' + thisType + ' read f' + thisField + ';' + CRLF;
-        end;
+        privateVars := privateVars + TAB2 + 'f' + upperCamelCase(thisField) + ': ' + thisType + ';' + CRLF;
+        publicProperties := publicProperties + TAB2 + 'property ' + upperCamelCase(thisField) + ': ' + thisType + ' read f' + upperCamelCase(thisField) + ' write f' + upperCamelCase(thisField) + ';' + CRLF;
         Next;
       end;
       ds.Free;
@@ -233,7 +229,7 @@ begin
       if (not FileExists('' + path + '\class\mysql\ext\' + tableName + '_mysql_ext_dao.pas')) then
       begin
         Write('Generating ' + '"' + path + '\class\mysql\ext\' + tableName + '_mysql_ext_dao.pas"...');
-        tableClassName := getClazzName(tableName);
+        tableClassName := upperCamelCase(tableName);
         usesList := TAB + tableName + '_mysql_dao;';
         template := TTemplate.Create(TEMPLATE_PATH + 'dao_ext.tpl');
         template.setPair('unit_name', tableName);
@@ -285,7 +281,7 @@ begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.getDatabase).AsString;
       Write('Generating ' + '"' + path + '\class\mysql\' + tableName + '_mysql_dao.pas"...');
       hasPK := doesTableContainPK(tableName);
-      tableClassName := getClazzName(tableName);
+      tableClassName := upperCamelCase(tableName);
       ds := getFields(tableName);
       parameterSetter := CRLF;
       insertFields := '';
@@ -313,33 +309,33 @@ begin
         else
         begin
           insertFields := insertFields + thisField + ', ';
-          updateFields := updateFields + thisField + ' = :' + getVarNameWithS(thisField) + ', ';
-          insertValues := insertValues + ':' + getVarNameWithS(thisField) + ', ';
-          parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + getVarNameWithS(thisField) + ''').Value := ' + tableName + '.' + thisField + ';' + CRLF;
-          queryByDef := queryByDef + TAB2 + 'function queryBy' + getClazzName(thisField) + '(const value: ' + delphiType + '): TList<T' + tableClassName + '>;' + CRLF;
-          queryByFunc := queryByFunc + 'function T' + tableClassName + 'MySQLDAO.queryBy' + getClazzName(thisField) + '(const value: ' + delphiType + '): TList<T' + tableClassName + '>;' + CRLF;
+          updateFields := updateFields + thisField + ' = :' + upperCamelCase(thisField) + ', ';
+          insertValues := insertValues + ':' + upperCamelCase(thisField) + ', ';
+          parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + upperCamelCase(thisField) + ''').Value := ' + tableName + '.' + upperCamelCase(thisField) + ';' + CRLF;
+          queryByDef := queryByDef + TAB2 + 'function queryBy' + upperCamelCase(thisField) + '(const value: ' + delphiType + '): TList<T' + tableClassName + '>;' + CRLF;
+          queryByFunc := queryByFunc + 'function T' + tableClassName + 'MySQLDAO.queryBy' + upperCamelCase(thisField) + '(const value: ' + delphiType + '): TList<T' + tableClassName + '>;' + CRLF;
           queryByFunc := queryByFunc + 'var' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry: TTBGQuery;' + CRLF;
           queryByFunc := queryByFunc + 'begin' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry := TTBGQuery.Create;' + CRLF;
-          queryByFunc := queryByFunc + TAB + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + thisField + ' = :' + getVarNameWithS(thisField) + ''');' + CRLF;
-          queryByFunc := queryByFunc + TAB + 'qry.ParamByName(''' + getVarNameWithS(thisField) + ''').Value := value;' + CRLF;
+          queryByFunc := queryByFunc + TAB + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + thisField + ' = :' + upperCamelCase(thisField) + ''');' + CRLF;
+          queryByFunc := queryByFunc + TAB + 'qry.ParamByName(''' + upperCamelCase(thisField) + ''').Value := value;' + CRLF;
           queryByFunc := queryByFunc + TAB + 'Result := getList(qry);' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry.Free;' + CRLF;
           queryByFunc := queryByFunc + 'end;' + CRLF2;
-          deleteByDef := deleteByDef + TAB2 + 'function deleteBy' + getClazzName(thisField) + '(const value: ' + delphiType + '): Integer;' + CRLF;
-          deleteByFunc := deleteByFunc + 'function T' + tableClassName + 'MySQLDAO.deleteBy' + getClazzName(thisField) + '(const value: ' + delphiType + '): Integer;' + CRLF;
+          deleteByDef := deleteByDef + TAB2 + 'function deleteBy' + upperCamelCase(thisField) + '(const value: ' + delphiType + '): Integer;' + CRLF;
+          deleteByFunc := deleteByFunc + 'function T' + tableClassName + 'MySQLDAO.deleteBy' + upperCamelCase(thisField) + '(const value: ' + delphiType + '): Integer;' + CRLF;
           deleteByFunc := deleteByFunc + 'var' + CRLF;
           deleteByFunc := deleteByFunc + TAB + 'qry: TTBGQuery;' + CRLF;
           deleteByFunc := deleteByFunc + 'begin' + CRLF;
           deleteByFunc := deleteByFunc + TAB + 'qry := TTBGQuery.Create;' + CRLF;
-          deleteByFunc := deleteByFunc + TAB + 'qry.sql.Add(''DELETE FROM ' + tableName + ' WHERE ' + thisField + ' = :' + getVarNameWithS(thisField) + ''');' + CRLF;
-          deleteByFunc := deleteByFunc + TAB + 'qry.ParamByName(''' + getVarNameWithS(thisField) + ''').Value := value;' + CRLF;
+          deleteByFunc := deleteByFunc + TAB + 'qry.sql.Add(''DELETE FROM ' + tableName + ' WHERE ' + thisField + ' = :' + upperCamelCase(thisField) + ''');' + CRLF;
+          deleteByFunc := deleteByFunc + TAB + 'qry.ParamByName(''' + upperCamelCase(thisField) + ''').Value := value;' + CRLF;
           deleteByFunc := deleteByFunc + TAB + 'Result := executeUpdate(qry);' + CRLF;
           deleteByFunc := deleteByFunc + TAB + 'qry.Free;' + CRLF;
           deleteByFunc := deleteByFunc + 'end;' + CRLF2;
         end;
-        readRow := readRow + TAB + getVarName(tableName) + '.' + getVarNameWithS(thisField) + ' := dataset.FieldByName(''' + thisField + ''').' + asType + ';' + CRLF;
+        readRow := readRow + TAB + tableClassName + '.' + upperCamelCase(thisField) + ' := dataset.FieldByName(''' + thisField + ''').' + asType + ';' + CRLF;
         Next;
       end;
       ds.Free;
@@ -351,7 +347,7 @@ begin
         end
         else
         begin
-          template := TTemplate.Create(TEMPLATE_PATH + 'dao_with_complex_pk.tpl');
+          template := TTemplate.Create(TEMPLATE_PATH + 'dao_complex_pk.tpl');
         end;
       end
       else
@@ -359,9 +355,8 @@ begin
         template := TTemplate.Create(TEMPLATE_PATH + 'dao_view.tpl');
       end;
       template.setPair('dao_class_name', 'T' + tableClassName);
-      template.setPair('domain_class_name', getDTOName(tableName));
       template.setPair('table_name', tableName);
-      template.setPair('var_name', getVarName(tableName));
+      template.setPair('var_name', upperCamelCase(tableName));
       insertFields := Copy(insertFields, 1, Length(insertFields) - 1);
       updateFields := Copy(updateFields, 1, Length(updateFields) - 1);
       insertValues := Copy(insertValues, 1, Length(insertValues) - 1);
@@ -384,12 +379,12 @@ begin
             s3 := s3 + TAB2;
           end;
           insertFields2 := insertFields2 + ', ' + pks[i];
-          s := s + '$' + getVarNameWithS(pks[i]);
+          s := s + '$' + upperCamelCase(pks[i]);
           s2 := s2 + pks[i] + ' = ?';
-          s3 := s3 + '$sqlQuery->setNumber($' + getVarNameWithS(pks[i]) + ');';
+          s3 := s3 + '$sqlQuery->setNumber($' + upperCamelCase(pks[i]) + ');';
           s3 := s3 + CRLF;
           s4 := s4 + CRLF + TAB2;
-          s4 := s4 + '$sqlQuery->setNumber($' + getVarName(tableName) + '->' + getVarNameWithS(pks[i]) + ');';
+          s4 := s4 + '$sqlQuery->setNumber($' + upperCamelCase(tableName) + '->' + upperCamelCase(pks[i]) + ');';
           s4 := s4 + CRLF;
         end;
         if (s[1] = ',') then
@@ -416,7 +411,7 @@ begin
         template.setPair('pk_set', s3);
         template.setPair('pk_where', s2);
         template.setPair('pks', s);
-        template.setPair('pk_with_s', getVarNameWithS(pk));
+        template.setPair('pk_with_s', upperCamelCase(pk));
         template.setPair('insert_fields', insertFields);
         template.setPair('update_fields', updateFields);
         template.setPair('insert_values', insertValues);
@@ -469,7 +464,7 @@ begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.getDatabase).AsString;
       Write('Generating ' + '"' + path + '\class\dao\' + tableName + '_dao.pas"...');
       hasPK := doesTableContainPK(tableName);
-      tableClassName := getClazzName(tableName);
+      tableClassName := upperCamelCase(tableName);
       ds := getFields(tableName);
       parameterSetter := CRLF;
       insertFields := '';
@@ -495,13 +490,13 @@ begin
         else
         begin
           insertFields := insertFields + thisField + ', ';
-          updateFields := updateFields + thisField + ' = :' + getVarNameWithS(thisField) + ', ';
-          insertValues := insertValues + ':' + getVarNameWithS(thisField) + ', ';
-          parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + getVarNameWithS(thisField) + ''').Value := ' + tableName + '.' + thisField + ';' + CRLF;
-          queryByDef := queryByDef + TAB2 + 'function queryBy' + getClazzName(thisField) + '(const value: ' + delphiType + '): TList<T' + tableClassName + '>;' + CRLF;
-          deleteByDef := deleteByDef + TAB2 + 'function deleteBy' + getClazzName(thisField) + '(const value: ' + delphiType + '): Integer;' + CRLF;
+          updateFields := updateFields + thisField + ' = :' + upperCamelCase(thisField) + ', ';
+          insertValues := insertValues + ':' + upperCamelCase(thisField) + ', ';
+          parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + upperCamelCase(thisField) + ''').Value := ' + tableName + '.' + thisField + ';' + CRLF;
+          queryByDef := queryByDef + TAB2 + 'function queryBy' + upperCamelCase(thisField) + '(const value: ' + delphiType + '): TList<T' + tableClassName + '>;' + CRLF;
+          deleteByDef := deleteByDef + TAB2 + 'function deleteBy' + upperCamelCase(thisField) + '(const value: ' + delphiType + '): Integer;' + CRLF;
         end;
-        readRow := readRow + TAB + getVarName(tableName) + '.' + getVarNameWithS(thisField) + ' := dataset.FieldByName(''' + thisField + ''').' + asType + ';' + CRLF;
+        readRow := readRow + TAB + tableClassName + '.' + upperCamelCase(thisField) + ' := dataset.FieldByName(''' + thisField + ''').' + asType + ';' + CRLF;
         Next;
       end;
       ds.Free;
@@ -513,7 +508,7 @@ begin
         end
         else
         begin
-          template := TTemplate.Create(TEMPLATE_PATH + 'idao_with_complex_pk.tpl');
+          template := TTemplate.Create(TEMPLATE_PATH + 'idao_complex_pk.tpl');
         end;
       end
       else
@@ -522,7 +517,7 @@ begin
       end;
       template.setPair('dao_class_name', 'T' + tableClassName);
       template.setPair('table_name', tableName);
-      template.setPair('var_name', getVarName(tableName));
+      template.setPair('var_name', upperCamelCase(tableName));
       if (hasPK) then
       begin
         insertFields := Copy(insertFields, 1, Length(insertFields) - 1);
@@ -545,12 +540,12 @@ begin
             s3 := s3 + TAB2;
           end;
           insertFields2 := insertFields2 + ', ' + pks[i];
-          s := s + '$' + getVarNameWithS(pks[i]);
+          s := s + '$' + upperCamelCase(pks[i]);
           s2 := s2 + pks[i] + ' = ?';
-          s3 := s3 + '$sqlQuery->setNumber($' + getVarNameWithS(pks[i]) + ');';
+          s3 := s3 + '$sqlQuery->setNumber($' + upperCamelCase(pks[i]) + ');';
           s3 := s3 + CRLF;
           s4 := s4 + CRLF + TAB2;
-          s4 := s4 + '$sqlQuery->setNumber($' + getVarName(tableName) + '->' + getVarNameWithS(pks[i]) + ');';
+          s4 := s4 + '$sqlQuery->setNumber($' + upperCamelCase(tableName) + '->' + upperCamelCase(pks[i]) + ');';
           s4 := s4 + CRLF;
         end;
         template.setPair('insert_values2', insertValues2);
@@ -592,16 +587,19 @@ end;
 
 class procedure TGenerator.generateStoredRoutines(const path: string);
 var
-  routineName, createSQL,
-  usesList, functionDeclarations, implementationCode: string;
+  routineName, createSQL, funcParams, sqlParams, comment,
+  sqlReturnType, delphiReturnType,
+  functionDeclarations, implementationCode: string;
+  paramRecs: TList<TRoutineParameter>;
+  paramRec : TRoutineParameter;
   template: TTemplate;
   qry: TTBGQuery;
-  ds, ds2: TClientDataSet;
+  ds: TClientDataSet;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  Write('Generating ' + '"' + path + '\class\dao\dao_factory.pas"...');
+  Write('Generating ' + '"' + path + '\class\stored_routines.pas"...');
   qry := TTBGQuery.Create;
   qry.sql.Add('SHOW PROCEDURE STATUS');
   ds := TQueryExecutor.execute(qry);
@@ -612,33 +610,121 @@ begin
     while (not Eof) do
     begin
       routineName := FieldByName('Name').AsString;
+      comment := FieldByName('Comment').AsString;
       qry := TTBGQuery.Create;
       qry.sql.Add('SHOW CREATE PROCEDURE ' + routineName);
-      ds2 := TQueryExecutor.execute(qry);
+      createSQL := TQueryExecutor.queryForString(qry, 'Create Procedure');
       qry.Free;
-      createSQL := ds2.FieldByName('Create Procedure').AsString;
-      tableClassName := getClazzName(tableName);
-      usesList := usesList + TAB + tableName + '_mysql_ext_dao,' + CRLF;
-      functionDeclarations := functionDeclarations + TAB2 + 'class function get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
-      implementationCode := implementationCode + 'class function TDAOFactory.get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
+      paramRecs := getRoutineParameters(createSQL, False);
+      funcParams := '';
+      sqlParams := '';
+      for paramRec in paramRecs do
+      begin
+        funcParams := funcParams + 'const ' + lowerCamelCase(paramRec.varName) + ': ' + getDelphiType(paramRec.sqlType) + '; ';
+        sqlParams := sqlParams + ':' + paramRec.varName + ', ';
+      end;
+      if (funcParams <> '') then
+      begin
+        funcParams := Copy(funcParams, 1, Length(funcParams) - 2);
+        sqlParams := Copy(sqlParams, 1, Length(sqlParams) - 2);
+      end;
+      functionDeclarations := functionDeclarations + TAB2 + 'class procedure ' + lowerCamelCase(routineName) + '(' + funcParams + ');' + CRLF;
+      implementationCode := implementationCode + '{**' + CRLF;
+      if (comment <> '') then
+      begin
+        implementationCode := implementationCode + ' * ' + comment + CRLF;
+        implementationCode := implementationCode + ' *' + CRLF;
+      end;
+      implementationCode := implementationCode + ' * @param ' + getDelphiType(paramRec.sqlType) + ' ' + lowerCamelCase(paramRec.varName) + CRLF;
+      implementationCode := implementationCode + '*}' + CRLF;
+      implementationCode := implementationCode + 'class procedure TStoredRoutines.' + lowerCamelCase(routineName) + '(' + funcParams + ');' + CRLF;
+      implementationCode := implementationCode + 'var' + CRLF;
+      implementationCode := implementationCode + TAB + 'ds: TClientDataSet;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'Result := T' + tableClassName + 'MySQLExtDAO.Create;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.sql.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
+      for paramRec in paramRecs do
+      begin
+        implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.varName + ''').Value := ' + lowerCamelCase(paramRec.varName) + ';' + CRLF;
+      end;
+      implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.execute(qry);' + CRLF;
+      implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
+      paramRecs.Free;
       Next;
     end;
-    usesList := LeftStr(usesList, Length(usesList) - 3) + ';';
+  end;
+  qry := TTBGQuery.Create;
+  qry.sql.Add('SHOW FUNCTION STATUS');
+  ds := TQueryExecutor.execute(qry);
+  qry.Free;
+  with (ds) do
+  begin
+    First;
+    while (not Eof) do
+    begin
+      routineName := FieldByName('Name').AsString;
+      qry := TTBGQuery.Create;
+      qry.sql.Add('SHOW CREATE FUNCTION ' + routineName);
+      createSQL := TQueryExecutor.queryForString(qry, 'Create Function');
+      qry.Free;
+      paramRecs := getRoutineParameters(createSQL, True);
+      funcParams := '';
+      sqlParams := '';
+      for paramRec in paramRecs do
+      begin
+        funcParams := funcParams + 'const ' + lowerCamelCase(paramRec.varName) + ': ' + getDelphiType(paramRec.sqlType) + '; ';
+        sqlParams := sqlParams + ':' + paramRec.varName + ', ';
+      end;
+      if (funcParams <> '') then
+      begin
+        funcParams := Copy(funcParams, 1, Length(funcParams) - 2);
+        sqlParams := Copy(sqlParams, 1, Length(sqlParams) - 2);
+      end;
+      sqlReturnType := getRoutineReturnType(createSQL);
+      delphiReturnType := getDelphiType(sqlReturnType);
+      functionDeclarations := functionDeclarations + TAB2 + 'class function ' + lowerCamelCase(routineName) + '(' + funcParams + '): ' + delphiReturnType + ';' + CRLF;
+      implementationCode := implementationCode + '{**' + CRLF;
+      if (comment <> '') then
+      begin
+        implementationCode := implementationCode + ' * ' + comment + CRLF;
+        implementationCode := implementationCode + ' *' + CRLF;
+      end;
+      implementationCode := implementationCode + ' * @param ' + getDelphiType(paramRec.sqlType) + ' ' + lowerCamelCase(paramRec.varName) + CRLF;
+      implementationCode := implementationCode + ' * @return ' + delphiReturnType + CRLF;
+      implementationCode := implementationCode + '*}' + CRLF;
+      implementationCode := implementationCode + 'class function TStoredRoutines.' + lowerCamelCase(routineName) + '(' + funcParams + '): ' + delphiReturnType + ';' + CRLF;
+      implementationCode := implementationCode + 'var' + CRLF;
+      implementationCode := implementationCode + TAB + 'ds: TClientDataSet;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
+      implementationCode := implementationCode + 'begin' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.sql.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
+      for paramRec in paramRecs do
+      begin
+        implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.varName + ''').Value := ' + lowerCamelCase(paramRec.varName) + ';' + CRLF;
+      end;
+      implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.execute(qry);' + CRLF;
+      implementationCode := implementationCode + TAB + 'Result := ds.FieldByName(''value'').Value;' + CRLF;
+      implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
+      implementationCode := implementationCode + 'end;' + CRLF;
+      implementationCode := implementationCode + CRLF;
+      paramRecs.Free;
+      Next;
+    end;
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
     implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(TEMPLATE_PATH + 'dao_factory.tpl');
-    template.setPair('uses_list', usesList);
+    template := TTemplate.Create(TEMPLATE_PATH + 'stored_routines.tpl');
     template.setPair('function_declarations', functionDeclarations);
     template.setPair('implementation_code', implementationCode);
     template.setPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-    template.write('' + path + '\class\dao\dao_factory.pas');
+    template.write('' + path + '\class\stored_routines.pas');
     template.Free;
     WriteLn(' done.');
   end;
+  ds.Free;
 {$IFNDEF CONSOLE}
   FreeConsole;
 {$ENDIF}
@@ -654,106 +740,67 @@ begin
   qry.Free;
 end;
 
-class function TGenerator.getClazzName(const tableName: string): string;
+class function TGenerator.lowerCamelCase(const value: string): string;
 var
-  i: Integer;
-  tableClassName: string;
+  cameled: string;
 begin
-  tableClassName := UpperCase(tableName[1]) + Copy(tableName, 2, MaxInt);
-  for i := 1 to Length(tableClassName) do
-  begin
-    if (tableClassName[i] = '_') then
-    begin
-      tableClassName := Copy(tableClassName, 1, i) + UpperCase(tableClassName[i + 1]) + Copy(tableClassName, i + 2, MaxInt);
-    end;
-  end;
-  Result := tableClassName;
+  cameled := upperCamelCase(value);
+  Result := LowerCase(cameled[1]) + Copy(cameled, 2, MaxInt);
 end;
 
-class function TGenerator.getDTOName(const tableName: string): string;
-var
-  dtoName: string;
-begin
-  dtoName := getClazzName(tableName);
-  if (dtoName[Length(dtoName)] = 's') then
-  begin
-    dtoName := Copy(dtoName, 1, Length(dtoName));
-  end;
-  Result := dtoName;
-end;
-
-class function TGenerator.getVarName(const tableName: string): string;
+class function TGenerator.upperCamelCase(const value: string): string;
 var
   i: Integer;
-  varName: string;
+  cameled: string;
+  humps: TStringList;
 begin
-  varName := LowerCase(tableName[1]) + Copy(tableName, 2, MaxInt);
-  for i := 1 to Length(varName) do
+  humps := TStringList.Create;
+  humps.Delimiter := '_';
+  humps.DelimitedText := value;
+  for i := 0 to humps.Count - 1 do
   begin
-    if (varName[i] = '_') then
-    begin
-      varName := Copy(varName, 1, i) + UpperCase(varName[i + 1]) + Copy(varName, i + 2, MaxInt);
-    end;
+    cameled := cameled + UpperCase(humps[i][1]) + Copy(humps[i], 2, MaxInt);
   end;
-  if (varName[Length(varName)] = 's') then
-  begin
-    varName := Copy(varName, 1, Length(varName) - 2);
-  end;
-  Result := varName;
-end;
-
-class function TGenerator.getVarNameWithS(const tableName: string): string;
-var
-  i: Integer;
-  varName: string;
-begin
-  varName := LowerCase(tableName[1]) + Copy(tableName, 2, MaxInt);
-  for i := 1 to Length(varName) do
-  begin
-    if (varName[i] = '_') then
-    begin
-      varName := Copy(varName, 1, i) + UpperCase(varName[i + 1]) + Copy(varName, i + 2, MaxInt);
-    end;
-  end;
-  Result := varName;
+  Result := fixReservedWords(cameled);
 end;
 
 class function TGenerator.getDelphiType(const sqlType: string): string;
 var
-  delphiType: string;
+  delphiType, sqlTypeL: string;
 begin
   delphiType := '';
-  if (Pos('tinyint(1)', sqlType) > 0) then
+  sqlTypeL := LowerCase(sqlType);
+  if (Pos('tinyint(1)', sqlTypeL) > 0) then
   begin
     delphiType := 'Boolean';
   end
-  else if (Pos('int(', sqlType) > 0) then
+  else if ((Pos('int', sqlTypeL) > 0) or (Pos('decimal', sqlTypeL) > 0)) then
   begin
     delphiType := 'Integer';
   end;
-  if ((Pos('float', sqlType) > 0) or (Pos('double', sqlType) > 0)) then
+  if ((Pos('float', sqlTypeL) > 0) or (Pos('double', sqlTypeL) > 0)) then
   begin
     delphiType := 'Extended';
   end;
-  if ((Pos('varchar', sqlType) > 0) or (Pos('text', sqlType) > 0) or (Pos('enum', sqlType) > 0)) then
+  if ((Pos('char', sqlTypeL) > 0) or (Pos('text', sqlTypeL) > 0) or (Pos('enum', sqlTypeL) > 0) or (Pos('set', sqlTypeL) > 0)) then
   begin
     delphiType := 'string';
   end;
-  if ((Pos('datetime', sqlType) > 0) or (Pos('timestamp', sqlType) > 0)) then
+  if ((Pos('datetime', sqlTypeL) > 0) or (Pos('timestamp', sqlTypeL) > 0)) then
   begin
     delphiType := 'TDateTime';
   end
   else
-  if (Pos('date', sqlType) > 0) then
+  if (Pos('date', sqlTypeL) > 0) then
   begin
     delphiType := 'TDate';
   end
   else
-  if (Pos('date', sqlType) > 0) then
+  if (Pos('time', sqlTypeL) > 0) then
   begin
     delphiType := 'TTime';
   end;
-  if (Pos('blob', sqlType) > 0) then
+  if ((Pos('blob', sqlTypeL) > 0) or (Pos('binary', sqlTypeL) > 0)) then
   begin
     delphiType := 'Variant';
   end;
@@ -762,34 +809,102 @@ end;
 
 class function TGenerator.getDelphiAsType(const sqlType: string): string;
 var
-  asType: string;
+  asType, sqlTypeL: string;
 begin
   asType := '';
-  if (Pos('tinyint(1)', sqlType) > 0) then
+  sqlTypeL := LowerCase(sqlType);
+  if (Pos('tinyint(1)', sqlTypeL) > 0) then
   begin
     asType := 'AsBoolean';
   end
-  else if (Pos('int(', sqlType) > 0) then
+  else if ((Pos('int', sqlTypeL) > 0) or (Pos('decimal', sqlTypeL) > 0)) then
   begin
     asType := 'AsInteger';
   end;
-  if ((Pos('float', sqlType) > 0) or (Pos('double', sqlType) > 0)) then
+  if ((Pos('float', sqlTypeL) > 0) or (Pos('double', sqlTypeL) > 0)) then
   begin
     asType := 'AsExtended';
   end;
-  if ((Pos('varchar', sqlType) > 0) or (Pos('text', sqlType) > 0) or (Pos('enum', sqlType) > 0)) then
+  if ((Pos('char', sqlTypeL) > 0) or (Pos('text', sqlTypeL) > 0) or (Pos('enum', sqlTypeL) > 0) or (Pos('set', sqlTypeL) > 0)) then
   begin
     asType := 'AsString';
   end;
-  if ((Pos('date', sqlType) > 0) or (Pos('time', sqlType) > 0)) then
+  if ((Pos('date', sqlTypeL) > 0) or (Pos('time', sqlTypeL) > 0)) then
   begin
     asType := 'AsDateTime';
   end;
-  if (Pos('blob', sqlType) > 0) then
+  if ((Pos('blob', sqlTypeL) > 0) or (Pos('binary', sqlTypeL) > 0)) then
   begin
     asType := 'AsVariant';
   end;
   Result := asType;
+end;
+
+class function TGenerator.fixReservedWords(const value: string): string;
+const
+  RESERVED_WORDS = 'Type';
+var
+  corrected: string;
+begin
+  corrected := value;
+  if (Pos(value, RESERVED_WORDS) > 0) then
+  begin
+    corrected := value + '_';
+  end;
+  Result := corrected;
+end;
+
+class function TGenerator.getRoutineParameters(const createSQL: string; const isFunction: Boolean): TList<TRoutineParameter>;
+var
+  i: Integer;
+  paramsStr: string;
+  params: TStringList;
+  param: TStringList;
+  paramRec: TRoutineParameter;
+  paramList: TList<TRoutineParameter>;
+begin
+  paramsStr := Copy(createSQL, Pos('(', createSQL) + 1, Pos(')', createSQL) - Pos('(', createSQL) - 1);
+  paramsStr := Trim(paramsStr);
+  paramsStr := StringReplace(paramsStr, #9, '', [rfReplaceAll]);
+  paramsStr := StringReplace(paramsStr, #$A, '', [rfReplaceAll]);
+  params := TStringList.Create;
+  params.Delimiter := ',';
+  params.StrictDelimiter := True;
+  params.DelimitedText := paramsStr;
+  paramList := TList<TRoutineParameter>.Create;
+  for i := 0 to params.Count - 1 do
+  begin
+    param := TStringList.Create;
+    param.Delimiter := ' ';
+    param.DelimitedText := params[i];
+    if (not isFunction) then
+    begin
+      paramRec.direction := param[0];
+      paramRec.varName := param[1];
+      paramRec.sqlType := param[2];
+    end
+    else
+    begin
+      paramRec.varName := param[0];
+      paramRec.sqlType := param[1];
+    end;
+    paramList.Add(paramRec);
+    param.Free;
+  end;
+  params.Free;
+  Result := paramList;
+end;
+
+class function TGenerator.getRoutineReturnType(const createSQL: string): string;
+var
+  returnTypeStr: string;
+begin
+  returnTypeStr := Copy(createSQL, Pos('RETURNS', createSQL));
+  returnTypeStr := Copy(returnTypeStr, 1, Pos('BEGIN', returnTypeStr));
+  returnTypeStr := Trim(returnTypeStr);
+  returnTypeStr := StringReplace(returnTypeStr, #9, '', [rfReplaceAll]);
+  returnTypeStr := StringReplace(returnTypeStr, #$A, '', [rfReplaceAll]);
+  Result := returnTypeStr;
 end;
 
 class function TGenerator.concatLongString(const inStr: string; const multiline: Boolean): string;

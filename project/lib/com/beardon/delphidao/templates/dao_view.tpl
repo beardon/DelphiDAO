@@ -102,10 +102,10 @@ var
   ${var_name}s: TList<${dao_class_name}>;
 begin
   dataset := TQueryExecutor.execute(qry);
-  courses := TList<${dao_class_name}>.Create;
+  ${var_name}s := TList<${dao_class_name}>.Create;
   while (not dataset.Eof) do
   begin
-	courses.Add(readRow(dataset));
+    ${var_name}s.Add(readRow(dataset));
     dataset.Next;
   end;
   Result := ${var_name}s;  

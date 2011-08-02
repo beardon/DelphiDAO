@@ -22,7 +22,8 @@ type
     function insert(var ${var_name}: ${dao_class_name}): Integer;
     function update(var ${var_name}: ${dao_class_name}): Integer;
     function clean: Integer;
-${functions}
+${query_by_definitions}
+${delete_by_definitions}
 end;
 
 implementation

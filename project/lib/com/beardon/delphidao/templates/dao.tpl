@@ -138,7 +138,7 @@ begin
   qry.sql.Add('SET ${update_fields}');
   qry.sql.Add('WHERE ${pk} = :${pk_with_s}');
 ${parameter_setter}
-  qry.paramByName('${pk_with_s}').Value := ${var_name}.${pk};
+  qry.paramByName('${pk_with_s}').Value := ${var_name}.${pk_with_s};
   Result := executeUpdate(qry);
   qry.Free;
 end;
@@ -179,10 +179,10 @@ var
   ${var_name}s: TList<${dao_class_name}>;
 begin
   dataset := TQueryExecutor.execute(qry);
-  courses := TList<${dao_class_name}>.Create;
+  ${var_name}s := TList<${dao_class_name}>.Create;
   while (not dataset.Eof) do
   begin
-	courses.Add(readRow(dataset));
+    ${var_name}s.Add(readRow(dataset));
     dataset.Next;
   end;
   Result := ${var_name}s;  
