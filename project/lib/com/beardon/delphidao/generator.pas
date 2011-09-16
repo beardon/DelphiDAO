@@ -1,4 +1,4 @@
-unit generator;
+unit Generator;
 
 interface
 
@@ -39,12 +39,12 @@ implementation
 
 uses
   Classes,
-  connection_property,
-  query,
-  query_executor,
+  ConnectionProperty,
+  Query,
+  QueryExecutor,
   StrUtils,
   SysUtils,
-  template,
+  Template,
   Windows;
 
 const

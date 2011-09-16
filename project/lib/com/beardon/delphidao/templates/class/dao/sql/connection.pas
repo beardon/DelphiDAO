@@ -1,4 +1,4 @@
-unit connection;
+unit Connection;
 
 interface
 
@@ -26,7 +26,7 @@ type
 implementation
 
 uses
-  connection_factory;
+  ConnectionFactory;
 
 constructor TConnection.Create;
 begin

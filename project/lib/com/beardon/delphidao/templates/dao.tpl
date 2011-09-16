@@ -23,75 +23,75 @@ type
   private
     fConnection: TConnection;
   protected
-    function readRow(const dataset: TClientDataSet): ${dao_class_name}; 
-    function getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
-    function getRow(var qry: TTBGQuery): ${dao_class_name};
-    function execute(var qry: TTBGQuery): TClientDataSet;
-    function executeUpdate(var qry: TTBGQuery): Integer;
-    function querySingleResult(var qry: TTBGQuery): string;
-    function executeInsert(var qry: TTBGQuery): Integer;	
+    function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
+    function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
+    function GetRow(var Query: TTBGQuery): ${dao_class_name};
+    function Execute(var Query: TTBGQuery): TClientDataSet;
+    function ExecuteUpdate(var Query: TTBGQuery): Integer;
+    function QuerySingleResult(var Query: TTBGQuery): string;
+    function ExecuteInsert(var Query: TTBGQuery): Integer;	
   public
-    constructor Create(aConnection: TConnection);
-    function load(const id: Variant): ${dao_class_name};
-    function queryAll: TObjectList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
-    function delete(const ${pk}: Variant): Integer;
-    function insert(var ${var_name}: ${dao_class_name}): Integer;
-    function update(var ${var_name}: ${dao_class_name}): Integer;
-    function clean: Integer;
+    constructor Create(AConnection: TConnection);
+    function Load(const Id: Variant): ${dao_class_name};
+    function QueryAll: TObjectList<${dao_class_name}>;
+    function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
+    function Delete(const ${pk}: Variant): Integer;
+    function Insert(var ${var_name}: ${dao_class_name}): Integer;
+    function Update(var ${var_name}: ${dao_class_name}): Integer;
+    function Clean: Integer;
 ${query_by_definitions}
 ${delete_by_definitions}
 end;
 
 implementation
 
-constructor ${type_name}.Create(aConnection: TConnection);
+constructor ${type_name}.Create(AConnection: TConnection);
 begin
-  fConnection := aConnection;
+  fConnection := AConnection;
 end;
 
 {**
  * Get Domain object by primary key
  *
- * @param String id primary key
+ * @param String Id primary key
  * @return ${dao_class_name}
  *}
-function ${type_name}.load(const id: Variant): ${dao_class_name};
+function ${type_name}.Load(const Id: Variant): ${dao_class_name};
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('SELECT * FROM ${table_name} WHERE ${pk} = :${pk}');
-  qry.paramByName('${pk}').Value := id;
-  Result := getRow(qry);
+  qry.paramByName('${pk}').Value := Id;
+  Result := GetRow(qry);
   qry.Free;
 end;
 
 {**
  * Get all records from table
  *}
-function ${type_name}.queryAll: TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAll: TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('SELECT * FROM ${table_name}');
-  Result := getList(qry);
+  Result := GetList(qry);
   qry.Free;
 end;
 	
 {**
  * Get all records from table ordered by field
  *
- * @param orderColumn column name
+ * @param OrderColumn column name
  *}
-function ${type_name}.queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + orderColumn);
-  Result := getList(qry);
+  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + OrderColumn);
+  Result := GetList(qry);
   qry.Free;
 end;
 	
@@ -99,14 +99,14 @@ end;
  * Delete record from table
  * @param ${var_name} primary key
  *}
-function ${type_name}.delete(const ${pk}: Variant): Integer;
+function ${type_name}.Delete(const ${pk}: Variant): Integer;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('DELETE FROM ${table_name} WHERE ${pk} = :${pk}');
   qry.paramByName('${pk}').Value := ${pk};
-  Result := executeUpdate(qry);
+  Result := ExecuteUpdate(qry);
   qry.Free;
 end;
 	
@@ -115,7 +115,7 @@ end;
  *
  * @param ${dao_class_name} ${var_name}
  *}
-function ${type_name}.insert(var ${var_name}: ${dao_class_name}): Integer;
+function ${type_name}.Insert(var ${var_name}: ${dao_class_name}): Integer;
 var
   id: Integer;
   qry: TTBGQuery;
@@ -126,7 +126,7 @@ begin
   qry.sql.Add('VALUES');
   qry.sql.Add('(${insert_values})');
 ${parameter_setter}
-  id := executeInsert(qry);
+  id := ExecuteInsert(qry);
   ${var_name}.${pk_with_s} := id;
   Result := id;
   qry.Free;
@@ -137,7 +137,7 @@ end;
  *
  * @param ${dao_class_name} ${var_name}
  *}
-function ${type_name}.update(var ${var_name}: ${dao_class_name}): Integer;
+function ${type_name}.Update(var ${var_name}: ${dao_class_name}): Integer;
 var
   qry: TTBGQuery;
 begin
@@ -147,20 +147,20 @@ begin
   qry.sql.Add('WHERE ${pk} = :${pk_with_s}');
 ${parameter_setter}
   qry.paramByName('${pk_with_s}').Value := ${var_name}.${pk_with_s};
-  Result := executeUpdate(qry);
+  Result := ExecuteUpdate(qry);
   qry.Free;
 end;
 
 {**
  * Delete all rows
  *}
-function ${type_name}.clean: Integer;
+function ${type_name}.Clean: Integer;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('DELETE FROM ${table_name}');
-  Result := executeUpdate(qry);
+  Result := ExecuteUpdate(qry);
   qry.Free;
 end;
 
@@ -172,7 +172,7 @@ ${delete_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.readRow(const dataset: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const Dataset: TClientDataSet): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
@@ -181,17 +181,17 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
 var
   dataset: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.execute(qry, fConnection);
+  dataset := TQueryExecutor.Execute(Query, fConnection);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
   while (not dataset.Eof) do
   begin
-    ${var_name}s.Add(readRow(dataset));
+    ${var_name}s.Add(ReadRow(dataset));
     dataset.Next;
   end;
   Result := ${var_name}s;  
@@ -203,45 +203,45 @@ end;
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.getRow(var qry: TTBGQuery): ${dao_class_name};
+function ${type_name}.GetRow(var Query: TTBGQuery): ${dao_class_name};
 var
   dataset: TClientDataSet;
 begin
-  dataset := TQueryExecutor.execute(qry);
-  Result := readRow(dataset);
+  dataset := TQueryExecutor.Execute(Query);
+  Result := ReadRow(dataset);
   dataset.Free;
 end; 
 	
 {**
  * Execute sql query
  *}
-function ${type_name}.execute(var qry: TTBGQuery): TClientDataSet;
+function ${type_name}.Execute(var Query: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.execute(qry, fConnection);
+  Result := TQueryExecutor.Execute(Query, fConnection);
 end; 
 
 {**
  * Execute sql query
  *}
-function ${type_name}.executeUpdate(var qry: TTBGQuery): Integer;
+function ${type_name}.ExecuteUpdate(var Query: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.executeUpdate(qry, fConnection);
+  Result := TQueryExecutor.ExecuteUpdate(Query, fConnection);
 end; 
 
 {**
  * Query for one row and one column
  *}
-function ${type_name}.querySingleResult(var qry: TTBGQuery): string;
+function ${type_name}.QuerySingleResult(var Query: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(qry, fConnection);
+  Result := TQueryExecutor.queryForString(Query, fConnection);
 end; 
 
 {**
  * Insert row to table
  *}
-function ${type_name}.executeInsert(var qry: TTBGQuery): Integer;
+function ${type_name}.ExecuteInsert(var Query: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.executeInsert(qry, fConnection);
+  Result := TQueryExecutor.ExecuteInsert(Query, fConnection);
 end; 
 
 end.

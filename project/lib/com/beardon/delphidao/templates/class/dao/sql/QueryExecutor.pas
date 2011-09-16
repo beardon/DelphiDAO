@@ -1,12 +1,12 @@
-unit query_executor;
+unit QueryExecutor;
 
 interface
 
 uses
-  connection,
+  Connection,
   DB,
   DBClient,
-  query;
+  Query;
 
 type
   TQueryExecutor = class
@@ -27,7 +27,7 @@ implementation
 
 uses
   Provider,
-  transaction;
+  Transaction;
 
 class function TQueryExecutor.Execute(var Query: TTBGQuery): TClientDataSet;
 var

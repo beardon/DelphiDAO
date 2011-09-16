@@ -1,4 +1,4 @@
-unit connection_factory;
+unit ConnectionFactory;
 
 interface
 
@@ -15,7 +15,7 @@ type
 implementation
 
 uses
-  connection_property;
+  ConnectionProperty;
 
 class procedure TConnectionFactory.Close(var Connection: TMyConnection);
 begin

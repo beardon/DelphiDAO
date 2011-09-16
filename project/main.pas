@@ -1,4 +1,4 @@
-unit main;
+unit Main;
 
 interface
 
@@ -26,7 +26,7 @@ implementation
 
 uses
   FileCtrl,
-  generator;
+  Generator;
 
 {$R *.dfm}
 

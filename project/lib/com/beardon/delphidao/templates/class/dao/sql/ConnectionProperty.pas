@@ -1,4 +1,4 @@
-unit connection_property;
+unit ConnectionProperty;
 
 interface
 

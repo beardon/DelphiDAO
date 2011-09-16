@@ -1,10 +1,10 @@
-unit transaction;
+unit Transaction;
 
 interface
 
 uses
-  array_list,
-  connection;
+  ArrayList,
+  Connection;
 
 type
   TTransaction = class
@@ -22,7 +22,7 @@ type
 implementation
 
 uses
-  query;
+  Query;
 
 constructor TTransaction.Create;
 var

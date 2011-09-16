@@ -51,16 +51,16 @@
 			<DelphiCompile Include="DelphiDAOConsole.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="lib\com\beardon\delphidao\generator.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\template.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\core\array_list.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\connection.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\connection_factory.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\connection_property.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\query.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\query_executor.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\query_factory.pas"/>
-			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\transaction.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\Generator.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\Template.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\core\ArrayList.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\Connection.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\ConnectionFactory.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\ConnectionProperty.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\Query.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\QueryExecutor.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\QueryFactory.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\Transaction.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

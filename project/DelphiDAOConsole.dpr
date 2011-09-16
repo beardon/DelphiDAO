@@ -5,16 +5,16 @@ program DelphiDAOConsole;
 uses
   SysUtils,
   Forms,
-  generator in 'lib\com\beardon\delphidao\generator.pas',
-  template in 'lib\com\beardon\delphidao\templates\class\template.pas',
-  array_list in 'lib\com\beardon\delphidao\templates\class\dao\core\array_list.pas',
-  connection in 'lib\com\beardon\delphidao\templates\class\dao\sql\connection.pas',
-  connection_factory in 'lib\com\beardon\delphidao\templates\class\dao\sql\connection_factory.pas',
-  connection_property in 'lib\com\beardon\delphidao\templates\class\dao\sql\connection_property.pas',
-  query in 'lib\com\beardon\delphidao\templates\class\dao\sql\query.pas',
-  query_executor in 'lib\com\beardon\delphidao\templates\class\dao\sql\query_executor.pas',
-  query_factory in 'lib\com\beardon\delphidao\templates\class\dao\sql\query_factory.pas',
-  transaction in 'lib\com\beardon\delphidao\templates\class\dao\sql\transaction.pas';
+  Generator in 'lib\com\beardon\delphidao\Generator.pas',
+  Template in 'lib\com\beardon\delphidao\templates\class\Template.pas',
+  ArrayList in 'lib\com\beardon\delphidao\templates\class\dao\core\ArrayList.pas',
+  Connection in 'lib\com\beardon\delphidao\templates\class\dao\sql\Connection.pas',
+  ConnectionFactory in 'lib\com\beardon\delphidao\templates\class\dao\sql\ConnectionFactory.pas',
+  ConnectionProperty in 'lib\com\beardon\delphidao\templates\class\dao\sql\ConnectionProperty.pas',
+  Query in 'lib\com\beardon\delphidao\templates\class\dao\sql\Query.pas',
+  QueryExecutor in 'lib\com\beardon\delphidao\templates\class\dao\sql\QueryExecutor.pas',
+  QueryFactory in 'lib\com\beardon\delphidao\templates\class\dao\sql\QueryFactory.pas',
+  Transaction in 'lib\com\beardon\delphidao\templates\class\dao\sql\Transaction.pas';
 
 var
   path: string;

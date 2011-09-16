@@ -1,4 +1,4 @@
-unit query;
+unit Query;
 
 interface
 
@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-  query_factory;
+  QueryFactory;
 
 constructor TTBGQuery.Create;
 begin

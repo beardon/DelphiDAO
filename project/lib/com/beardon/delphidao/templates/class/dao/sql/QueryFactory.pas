@@ -1,4 +1,4 @@
-unit query_factory;
+unit QueryFactory;
 
 interface
 
