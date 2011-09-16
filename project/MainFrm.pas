@@ -1,4 +1,4 @@
-unit Main;
+unit MainFrm;
 
 interface
 
