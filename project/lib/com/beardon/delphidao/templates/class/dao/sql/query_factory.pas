@@ -8,12 +8,12 @@ uses
 type
   TTBGQueryFactory = class
   public
-    class function getQuery: TMyQuery; static;
+    class function GetQuery: TMyQuery; static;
   end;
 
 implementation
 
-class function TTBGQueryFactory.getQuery: TMyQuery;
+class function TTBGQueryFactory.GetQuery: TMyQuery;
 var
   query: TMyQuery;
 begin

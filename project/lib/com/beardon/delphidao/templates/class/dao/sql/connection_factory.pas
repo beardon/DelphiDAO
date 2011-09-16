@@ -8,8 +8,8 @@ uses
 type
   TConnectionFactory = class
   public
-    class procedure close(var connection: TMyConnection); static;
-    class function getConnection: TMyConnection; static;
+    class procedure Close(var Connection: TMyConnection); static;
+    class function GetConnection: TMyConnection; static;
   end;
 
 implementation
@@ -17,12 +17,12 @@ implementation
 uses
   connection_property;
 
-class procedure TConnectionFactory.close(var connection: TMyConnection);
+class procedure TConnectionFactory.Close(var Connection: TMyConnection);
 begin
-  connection.Close;
+  Connection.Close;
 end;
 
-class function TConnectionFactory.getConnection: TMyConnection;
+class function TConnectionFactory.GetConnection: TMyConnection;
 var
   connection: TMyConnection;
 begin
@@ -30,11 +30,11 @@ begin
   with (connection) do
   begin
     LoginPrompt := False;
-    Username := TConnectionProperty.getUser;
-    Password := TConnectionProperty.getPassword;
-    Database := TConnectionProperty.getDatabase;
-    Port := TConnectionProperty.getPort;
-    Server := TConnectionProperty.getHost;
+    Username := TConnectionProperty.GetUser;
+    Password := TConnectionProperty.GetPassword;
+    Database := TConnectionProperty.GetDatabase;
+    Port := TConnectionProperty.GetPort;
+    Server := TConnectionProperty.GetHost;
     ConnectionTimeout := 60;
     Connect;
   end;

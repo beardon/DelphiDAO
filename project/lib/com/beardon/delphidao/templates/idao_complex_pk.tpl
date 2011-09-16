@@ -16,8 +16,8 @@ type
    *}
   ${type_name} = Interface(IInterface)
     function load(const id: Variant): ${dao_class_name};
-    function queryAll: TList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TList<${dao_class_name}>;
+    function queryAll: TObjectList<${dao_class_name}>;
+    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
     function delete(const ${pk}: Variant): Integer;
     function insert(var ${var_name}: ${dao_class_name}): Integer;
     function update(var ${var_name}: ${dao_class_name}): Integer;

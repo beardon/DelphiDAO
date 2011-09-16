@@ -15,12 +15,12 @@ type
     fAffectedRows: Integer;
     fInsertId: Int64;
   public
-    property connection: TMyConnection read fConnection;
-    property affectedRows: Integer read fAffectedRows;
-    property insertId: Int64 read fInsertId;
+    property Connection: TMyConnection read fConnection;
+    property AffectedRows: Integer read fAffectedRows;
+    property InsertId: Int64 read fInsertId;
     constructor Create;
-    procedure close;
-    function executeQuery(var qry: TTBGQuery): TDataSet;
+    procedure Close;
+    function ExecuteQuery(var Query: TTBGQuery): TDataSet;
   end;
 
 implementation
@@ -30,21 +30,21 @@ uses
 
 constructor TConnection.Create;
 begin
-  fConnection := TConnectionFactory.getConnection;
+  fConnection := TConnectionFactory.GetConnection;
 end;
 
-procedure TConnection.close;
+procedure TConnection.Close;
 begin
-  TConnectionFactory.close(fConnection);
+  TConnectionFactory.Close(fConnection);
 end;
 
-function TConnection.executeQuery(var qry: TTBGQuery): TDataSet;
+function TConnection.ExecuteQuery(var Query: TTBGQuery): TDataSet;
 begin
-  qry.connection := fConnection;
-  qry.execute;
-  fAffectedRows := qry.dataset.RowsAffected;
-  fInsertId := qry.dataset.InsertId;
-  Result := qry.dataset;
+  Query.Connection := fConnection;
+  Query.Execute;
+  fAffectedRows := Query.Dataset.RowsAffected;
+  fInsertId := Query.Dataset.InsertId;
+  Result := Query.Dataset;
 end;
 
 end.

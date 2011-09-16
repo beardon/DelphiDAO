@@ -9,7 +9,7 @@ uses
 type
   TfrmMain = class(TForm)
     btnGenerate: TButton;
-    edtPath: TEdit;
+    edPath: TEdit;
     btnDir: TButton;
     procedure btnGenerateClick(Sender: TObject);
     procedure btnDirClick(Sender: TObject);
@@ -37,15 +37,15 @@ begin
   path := ExtractFilePath(Application.ExeName);
   if (SelectDirectory('Select the location where the DAO objects will be generated', '', path)) then
   begin
-    edtPath.Text := path;
+    edPath.Text := path;
   end;
 end;
 
 procedure TfrmMain.btnGenerateClick(Sender: TObject);
 begin
-  if (SysUtils.DirectoryExists(edtPath.Text)) then
+  if (SysUtils.DirectoryExists(edPath.Text)) then
   begin
-    TGenerator.generate(edtPath.Text);
+    TGenerator.generate(edPath.Text);
   end
   else
   begin

@@ -11,16 +11,16 @@ uses
 type
   TQueryExecutor = class
   public
-    class function execute(var qry: TTBGQuery): TClientDataSet; overload; static;
-    class function execute(var qry: TTBGQuery; const connection: TConnection): TClientDataSet; overload; static;
-    class function executeUpdate(var qry: TTBGQuery): Integer; overload; static;
-    class function executeUpdate(var qry: TTBGQuery; const connection: TConnection): Integer; overload; static;
-    class function executeInsert(var qry: TTBGQuery): Int64; overload; static;
-    class function executeInsert(var qry: TTBGQuery; const connection: TConnection): Int64; overload; static;
-    class function queryForString(var qry: TTBGQuery): string; overload; static;
-    class function queryForString(var qry: TTBGQuery; const connection: TConnection): string; overload; static;
-    class function queryForString(var qry: TTBGQuery; const fieldName: string): string; overload; static;
-    class function queryForString(var qry: TTBGQuery; const fieldName: string; const connection: TConnection): string; overload; static;
+    class function Execute(var Query: TTBGQuery): TClientDataSet; overload; static;
+    class function Execute(var Query: TTBGQuery; const Connection: TConnection): TClientDataSet; overload; static;
+    class function ExecuteUpdate(var Query: TTBGQuery): Integer; overload; static;
+    class function ExecuteUpdate(var Query: TTBGQuery; const Connection: TConnection): Integer; overload; static;
+    class function ExecuteInsert(var Query: TTBGQuery): Int64; overload; static;
+    class function ExecuteInsert(var Query: TTBGQuery; const Connection: TConnection): Int64; overload; static;
+    class function QueryForString(var Query: TTBGQuery): string; overload; static;
+    class function QueryForString(var Query: TTBGQuery; const Connection: TConnection): string; overload; static;
+    class function QueryForString(var Query: TTBGQuery; const FieldName: string): string; overload; static;
+    class function QueryForString(var Query: TTBGQuery; const FieldName: string; const Connection: TConnection): string; overload; static;
   end;
 
 implementation
@@ -29,162 +29,162 @@ uses
   Provider,
   transaction;
 
-class function TQueryExecutor.execute(var qry: TTBGQuery): TClientDataSet;
+class function TQueryExecutor.Execute(var Query: TTBGQuery): TClientDataSet;
 var
   connection: TConnection;
   transaction: TTransaction;
 begin
-  transaction := TTransaction.getCurrentTransaction;
+  transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
   begin
     connection := TConnection.Create;
   end
   else
   begin
-    connection := transaction.getConnection;
+    connection := transaction.GetConnection;
   end;
-  Result := execute(qry, connection);
+  Result := Execute(Query, connection);
   if (transaction = nil) then
   begin
-    connection.close;
+    connection.Close;
     connection.Free;
   end;
 end;
 
-class function TQueryExecutor.execute(var qry: TTBGQuery; const connection: TConnection): TClientDataSet;
+class function TQueryExecutor.Execute(var Query: TTBGQuery; const Connection: TConnection): TClientDataSet;
 var
   dataset: TClientDataSet;
   dsp: TDataSetProvider;
 begin
   dataset := TClientDataSet.Create(nil);
   dsp := TDataSetProvider.Create(dataset);
-  dsp.DataSet := connection.executeQuery(qry);
+  dsp.DataSet := Connection.ExecuteQuery(Query);
   dataset.SetProvider(dsp);
   dataset.Open;
   Result := dataset;
 end;
 
-class function TQueryExecutor.executeUpdate(var qry: TTBGQuery): Integer;
+class function TQueryExecutor.ExecuteUpdate(var Query: TTBGQuery): Integer;
 var
   connection: TConnection;
   transaction: TTransaction;
 begin
-  transaction := TTransaction.getCurrentTransaction;
+  transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
   begin
     connection := TConnection.Create;
   end
   else
   begin
-    connection := transaction.getConnection;
+    connection := transaction.GetConnection;
   end;
-  Result := executeUpdate(qry, connection);
+  Result := ExecuteUpdate(Query, connection);
   if (transaction = nil) then
   begin
-    connection.close;
+    connection.Close;
     connection.Free;
   end;
 end;
 
-class function TQueryExecutor.executeUpdate(var qry: TTBGQuery; const connection: TConnection): Integer;
+class function TQueryExecutor.ExecuteUpdate(var Query: TTBGQuery; const Connection: TConnection): Integer;
 var
   dataset: TDataSet;
 begin
-  dataset := connection.executeQuery(qry);
-  Result := connection.affectedRows;
+  dataset := Connection.ExecuteQuery(Query);
+  Result := Connection.AffectedRows;
   dataset.Free;
 end;
 
-class function TQueryExecutor.executeInsert(var qry: TTBGQuery): Int64;
+class function TQueryExecutor.ExecuteInsert(var Query: TTBGQuery): Int64;
 var
   connection: TConnection;
   transaction: TTransaction;
 begin
-  transaction := TTransaction.getCurrentTransaction;
+  transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
   begin
     connection := TConnection.Create;
   end
   else
   begin
-    connection := transaction.getConnection;
+    connection := transaction.GetConnection;
   end;
-  Result := executeInsert(qry, connection);
+  Result := ExecuteInsert(Query, connection);
   if (transaction = nil) then
   begin
-    connection.close;
+    connection.Close;
     connection.Free;
   end;
 end;
 
-class function TQueryExecutor.executeInsert(var qry: TTBGQuery; const connection: TConnection): Int64;
+class function TQueryExecutor.ExecuteInsert(var Query: TTBGQuery; const Connection: TConnection): Int64;
 var
   dataset: TDataSet;
 begin
-  dataset := connection.executeQuery(qry);
-  Result := connection.insertId;
+  dataset := Connection.ExecuteQuery(Query);
+  Result := Connection.InsertId;
   dataset.Free;
 end;
 
-class function TQueryExecutor.queryForString(var qry: TTBGQuery): string;
+class function TQueryExecutor.QueryForString(var Query: TTBGQuery): string;
 var
   connection: TConnection;
   transaction: TTransaction;
 begin
-  transaction := TTransaction.getCurrentTransaction;
+  transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
   begin
     connection := TConnection.Create;
   end
   else
   begin
-    connection := transaction.getConnection;
+    connection := transaction.GetConnection;
   end;
-  Result := queryForString(qry, connection);
+  Result := QueryForString(Query, connection);
   if (transaction = nil) then
   begin
-    connection.close;
+    connection.Close;
     connection.Free;
   end;
 end;
 
-class function TQueryExecutor.queryForString(var qry: TTBGQuery; const connection: TConnection): string;
+class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const Connection: TConnection): string;
 var
   dataset: TDataSet;
 begin
-  dataset := connection.executeQuery(qry);
+  dataset := Connection.ExecuteQuery(Query);
   Result := dataset.Fields[0].AsString;
   dataset.Free;
 end;
 
-class function TQueryExecutor.queryForString(var qry: TTBGQuery; const fieldName: string): string;
+class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const FieldName: string): string;
 var
   connection: TConnection;
   transaction: TTransaction;
 begin
-  transaction := TTransaction.getCurrentTransaction;
+  transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
   begin
     connection := TConnection.Create;
   end
   else
   begin
-    connection := transaction.getConnection;
+    connection := transaction.GetConnection;
   end;
-  Result := queryForString(qry, fieldName, connection);
+  Result := QueryForString(Query, FieldName, connection);
   if (transaction = nil) then
   begin
-    connection.close;
+    connection.Close;
     connection.Free;
   end;
 end;
 
-class function TQueryExecutor.queryForString(var qry: TTBGQuery; const fieldName: string; const connection: TConnection): string;
+class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const FieldName: string; const Connection: TConnection): string;
 var
   dataset: TDataSet;
 begin
-  dataset := connection.executeQuery(qry);
-  Result := dataset.FieldByName(fieldName).AsString;
+  dataset := Connection.ExecuteQuery(Query);
+  Result := dataset.FieldByName(FieldName).AsString;
   dataset.Free;
 end;
 

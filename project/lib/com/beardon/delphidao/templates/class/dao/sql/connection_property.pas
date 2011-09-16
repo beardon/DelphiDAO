@@ -7,42 +7,40 @@ type
   private
     const HOST = 'localhost';
     const PORT = 3306;
-//    const USER = 'AppUse';
-//    const PASSWORD = 'oldspice';
     const USER = 'username';
     const PASSWORD = 'password';
-    const DATABASE = 'schema';
+    const DATABASE = 'database';
   public
-    class function getHost: string; static;
-    class function getPort: Integer; static;
-    class function getUser: string; static;
-    class function getPassword: string; static;
-    class function getDatabase: string; static;
+    class function GetHost: string; static;
+    class function GetPort: Integer; static;
+    class function GetUser: string; static;
+    class function GetPassword: string; static;
+    class function GetDatabase: string; static;
   end;
 
 implementation
 
-class function TConnectionProperty.getHost: string;
+class function TConnectionProperty.GetHost: string;
 begin
   Result := HOST;
 end;
 
-class function TConnectionProperty.getPort: Integer;
+class function TConnectionProperty.GetPort: Integer;
 begin
   Result := PORT;
 end;
 
-class function TConnectionProperty.getUser: string;
+class function TConnectionProperty.GetUser: string;
 begin
   Result := USER;
 end;
 
-class function TConnectionProperty.getPassword: string;
+class function TConnectionProperty.GetPassword: string;
 begin
   Result := PASSWORD;
 end;
 
-class function TConnectionProperty.getDatabase: string;
+class function TConnectionProperty.GetDatabase: string;
 begin
   Result := DATABASE;
 end;

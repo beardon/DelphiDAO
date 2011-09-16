@@ -22,7 +22,7 @@ var
 begin
   try
     path := ExtractFilePath(Application.ExeName);
-    TGenerator.generate(path);
+    TGenerator.Generate(path);
     { TODO -oUser -cConsole Main : Insert code here }
   except
     on E: Exception do

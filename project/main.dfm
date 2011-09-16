@@ -34,7 +34,7 @@ object frmMain: TfrmMain
     TabOrder = 0
     OnClick = btnGenerateClick
   end
-  object edtPath: TEdit
+  object edPath: TEdit
     Left = 16
     Top = 16
     Width = 300

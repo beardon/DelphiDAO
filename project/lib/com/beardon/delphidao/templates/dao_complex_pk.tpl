@@ -22,7 +22,7 @@ type
   ${type_name} = class(TInterfacedObject, ${interface_name})
   protected
     function readRow(const dataset: TClientDataSet): ${dao_class_name}; 
-    function getList(var qry: TTBGQuery): TList<${dao_class_name}>;
+    function getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
     function getRow(var qry: TTBGQuery): ${dao_class_name};
     function execute(var qry: TTBGQuery): TClientDataSet;
     function executeUpdate(var qry: TTBGQuery): Integer;
@@ -30,8 +30,8 @@ type
     function executeInsert(var qry: TTBGQuery): Integer;	
   public
     function load(const id: Variant): ${dao_class_name};
-    function queryAll: TList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TList<${dao_class_name}>;
+    function queryAll: TObjectList<${dao_class_name}>;
+    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
     function delete(const ${pk}: Variant): Integer;
     function insert(var ${var_name}: ${dao_class_name}): Integer;
     function update(var ${var_name}: ${dao_class_name}): Integer;
@@ -61,7 +61,7 @@ end;
 {**
  * Get all records from table
  *}
-function ${type_name}.queryAll: TList<${dao_class_name}>;
+function ${type_name}.queryAll: TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
@@ -76,7 +76,7 @@ end;
  *
  * @param orderColumn column name
  *}
-function ${type_name}.queryAllOrderBy(const orderColumn: string): TList<${dao_class_name}>;
+function ${type_name}.queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
@@ -172,16 +172,17 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.getList(var qry: TTBGQuery): TList<${dao_class_name}>;
+function ${type_name}.getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
 var
   dataset: TClientDataSet;
-  ${var_name}s: TList<${dao_class_name}>;
+  ${var_name}s: TObjectList<${dao_class_name}>;
 begin
   dataset := TQueryExecutor.execute(qry);
-  courses := TList<${dao_class_name}>.Create;
+  ${var_name}s := TObjectList<${dao_class_name}>.Create;
+  ${var_name}s.OwnsObjects := True;
   while (not dataset.Eof) do
   begin
-	courses.Add(readRow(dataset));
+	${var_name}s.Add(readRow(dataset));
     dataset.Next;
   end;
   Result := ${var_name}s;  

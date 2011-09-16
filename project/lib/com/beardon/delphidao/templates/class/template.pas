@@ -5,13 +5,13 @@ interface
 type
   TTemplate = class
   private
-    template: string;
-    content: string;
-    function getContent: string;
+    fTemplate: string;
+    fContent: string;
+    function GetContent: string;
   public
-    constructor Create(const templateFilename: string);
-    procedure setPair(const key, value: string);
-    procedure write(const filename: string);
+    constructor Create(const TemplateFilename: string);
+    procedure SetPair(const Key, Value: string);
+    procedure Write(const Filename: string);
   end;
 
 implementation
@@ -22,48 +22,43 @@ uses
 const
   CRLF = #13#10;
 
-constructor TTemplate.Create(const templateFilename: string);
+constructor TTemplate.Create(const TemplateFilename: string);
 begin
-  template := templateFilename;
-  content := getContent;
+  fTemplate := TemplateFilename;
+  fContent := GetContent;
 end;
 
-procedure TTemplate.setPair(const key, value: string);
+procedure TTemplate.SetPair(const Key, Value: string);
 var
   tag: string;
 begin
-  tag := '${' + key + '}';
-  content := StringReplace(content, tag, value, [rfReplaceAll]);
+  tag := '${' + Key + '}';
+  fContent := StringReplace(fContent, tag, Value, [rfReplaceAll]);
 end;
 
-function TTemplate.getContent: string;
+function TTemplate.GetContent: string;
 var
   buffer, txt: string;
   handle: TextFile;
 begin
-  AssignFile(handle, template);
+  AssignFile(handle, fTemplate);
   Reset(handle);
   while not Eof(handle) do
   begin
     ReadLn(handle, buffer);
-//    if (Trim(buffer) = '') then
-//    begin
-//      buffer := CRLF;
-//    end;
     txt := txt + buffer + CRLF;
   end;
   CloseFile(handle);
   Result := txt;
 end;
 
-procedure TTemplate.write(const filename: string);
+procedure TTemplate.Write(const Filename: string);
 var
   handle: TextFile;
 begin
-  //echo $fileName.'<br/>';
-  AssignFile(handle, filename);
+  AssignFile(handle, Filename);
   ReWrite(handle);
-  WriteLn(handle, content);
+  WriteLn(handle, fContent);
   CloseFile(handle);
 end;
 

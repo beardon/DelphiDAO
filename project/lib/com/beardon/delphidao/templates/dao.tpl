@@ -20,18 +20,21 @@ type
    * @date: ${date}
    *}
   ${type_name} = class(TInterfacedObject, ${interface_name})
+  private
+    fConnection: TConnection;
   protected
     function readRow(const dataset: TClientDataSet): ${dao_class_name}; 
-    function getList(var qry: TTBGQuery): TList<${dao_class_name}>;
+    function getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
     function getRow(var qry: TTBGQuery): ${dao_class_name};
     function execute(var qry: TTBGQuery): TClientDataSet;
     function executeUpdate(var qry: TTBGQuery): Integer;
     function querySingleResult(var qry: TTBGQuery): string;
     function executeInsert(var qry: TTBGQuery): Integer;	
   public
+    constructor Create(aConnection: TConnection);
     function load(const id: Variant): ${dao_class_name};
-    function queryAll: TList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TList<${dao_class_name}>;
+    function queryAll: TObjectList<${dao_class_name}>;
+    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
     function delete(const ${pk}: Variant): Integer;
     function insert(var ${var_name}: ${dao_class_name}): Integer;
     function update(var ${var_name}: ${dao_class_name}): Integer;
@@ -41,6 +44,11 @@ ${delete_by_definitions}
 end;
 
 implementation
+
+constructor ${type_name}.Create(aConnection: TConnection);
+begin
+  fConnection := aConnection;
+end;
 
 {**
  * Get Domain object by primary key
@@ -62,7 +70,7 @@ end;
 {**
  * Get all records from table
  *}
-function ${type_name}.queryAll: TList<${dao_class_name}>;
+function ${type_name}.queryAll: TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
@@ -77,7 +85,7 @@ end;
  *
  * @param orderColumn column name
  *}
-function ${type_name}.queryAllOrderBy(const orderColumn: string): TList<${dao_class_name}>;
+function ${type_name}.queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
@@ -173,13 +181,14 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.getList(var qry: TTBGQuery): TList<${dao_class_name}>;
+function ${type_name}.getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
 var
   dataset: TClientDataSet;
-  ${var_name}s: TList<${dao_class_name}>;
+  ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.execute(qry);
-  ${var_name}s := TList<${dao_class_name}>.Create;
+  dataset := TQueryExecutor.execute(qry, fConnection);
+  ${var_name}s := TObjectList<${dao_class_name}>.Create;
+  ${var_name}s.OwnsObjects := True;
   while (not dataset.Eof) do
   begin
     ${var_name}s.Add(readRow(dataset));
@@ -208,7 +217,7 @@ end;
  *}
 function ${type_name}.execute(var qry: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.execute(qry);
+  Result := TQueryExecutor.execute(qry, fConnection);
 end; 
 
 {**
@@ -216,7 +225,7 @@ end;
  *}
 function ${type_name}.executeUpdate(var qry: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.executeUpdate(qry);
+  Result := TQueryExecutor.executeUpdate(qry, fConnection);
 end; 
 
 {**
@@ -224,7 +233,7 @@ end;
  *}
 function ${type_name}.querySingleResult(var qry: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(qry);
+  Result := TQueryExecutor.queryForString(qry, fConnection);
 end; 
 
 {**
@@ -232,7 +241,7 @@ end;
  *}
 function ${type_name}.executeInsert(var qry: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.executeInsert(qry);
+  Result := TQueryExecutor.executeInsert(qry, fConnection);
 end; 
 
 end.

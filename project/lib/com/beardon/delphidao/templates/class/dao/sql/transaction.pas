@@ -9,14 +9,14 @@ uses
 type
   TTransaction = class
   private
-    class var connection: TConnection;
-    transactions: TArrayList;
+    class var fConnection: TConnection;
+    fTransactions: TArrayList;
   public
     constructor Create;
-    procedure commit;
-    procedure rollback;
-    function getConnection: TConnection;
-    class function getCurrentTransaction: TTransaction; static;
+    procedure Commit;
+    procedure Rollback;
+    function GetConnection: TConnection;
+    class function GetCurrentTransaction: TTransaction; static;
   end;
 
 implementation
@@ -28,52 +28,52 @@ constructor TTransaction.Create;
 var
   qry: TTBGQuery;
 begin
-  connection := TConnection.Create;
-  if (TTransaction.transactions = nil) then
+  fConnection := TConnection.Create;
+  if (TTransaction.fTransactions = nil) then
   begin
-    TTransaction.transactions := TArrayList.Create;
+    TTransaction.fTransactions := TArrayList.Create;
   end;
-  TTransaction.transactions.add(Self);
+  TTransaction.fTransactions.Add(Self);
   qry := TTBGQuery.Create;
-  qry.sql.Add('BEGIN');
-  connection.executeQuery(qry);
+  qry.SQL.Add('BEGIN');
+  fConnection.ExecuteQuery(qry);
   qry.Free;
 end;
 
-procedure TTransaction.commit;
+procedure TTransaction.Commit;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('COMMIT');
-  connection.executeQuery(qry);
+  qry.SQL.Add('COMMIT');
+  fConnection.ExecuteQuery(qry);
   qry.Free;
-  connection.close;
-  TTransaction.transactions.removeLast;
+  fConnection.Close;
+  TTransaction.fTransactions.RemoveLast;
 end;
 
-procedure TTransaction.rollback;
+procedure TTransaction.Rollback;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('ROLLBACK');
-  connection.executeQuery(qry);
+  qry.SQL.Add('ROLLBACK');
+  fConnection.ExecuteQuery(qry);
   qry.Free;
-  connection.close;
-  TTransaction.transactions.removeLast;
+  fConnection.Close;
+  TTransaction.fTransactions.RemoveLast;
 end;
 
-function TTransaction.getConnection: TConnection;
+function TTransaction.GetConnection: TConnection;
 begin
-  Result := connection;
+  Result := fConnection;
 end;
 
-class function TTransaction.getCurrentTransaction: TTransaction;
+class function TTransaction.GetCurrentTransaction: TTransaction;
 begin
-  if (TTransaction.transactions <> nil) then
+  if (TTransaction.fTransactions <> nil) then
   begin
-    Result := TTransaction(TTransaction.transactions.getLast);
+    Result := TTransaction(TTransaction.fTransactions.GetLast);
   end
   else
   begin

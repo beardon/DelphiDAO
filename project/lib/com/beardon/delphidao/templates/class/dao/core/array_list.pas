@@ -5,40 +5,40 @@ interface
 type
   TArrayList = class
   private
-    tab: array of TObject;
+    fTab: array of TObject;
     fSize: Integer;
   protected
   public
-    property size: Integer read fSize;
+    property Size: Integer read fSize;
     constructor Create;
-    procedure add(value: TObject);
-    function get(idx: Integer): TObject;
-    function getLast: TObject;
-    function isEmpty: Boolean;
-    function removeLast: Integer;
+    procedure Add(Value: TObject);
+    function Get(Index: Integer): TObject;
+    function GetLast: TObject;
+    function IsEmpty: Boolean;
+    function RemoveLast: Integer;
   end;
 
 implementation
 
 constructor TArrayList.Create;
 begin
-  tab := nil;
+  fTab := nil;
   fSize := 0;
 end;
 
-procedure TArrayList.add(value: TObject);
+procedure TArrayList.Add(Value: TObject);
 begin
-  SetLength(tab, Length(tab) + 1);
-  tab[High(tab)] := value;
+  SetLength(fTab, Length(fTab) + 1);
+  fTab[High(fTab)] := Value;
   Inc(fSize);
 end;
 
-function TArrayList.get(idx: Integer): TObject;
+function TArrayList.Get(Index: Integer): TObject;
 begin
-  Result := tab[idx];
+  Result := fTab[Index];
 end;
 
-function TArrayList.getLast: TObject;
+function TArrayList.GetLast: TObject;
 begin
   if (fSize = 0) then
   begin
@@ -46,16 +46,16 @@ begin
   end
   else
   begin
-    Result := tab[fSize - 1];
+    Result := fTab[fSize - 1];
   end;
 end;
 
-function TArrayList.isEmpty: Boolean;
+function TArrayList.IsEmpty: Boolean;
 begin
-  Result := (size = 0);
+  Result := (Size = 0);
 end;
 
-function TArrayList.removeLast: Integer;
+function TArrayList.RemoveLast: Integer;
 begin
   Dec(fSize);
   Result := fSize;
