@@ -1,16 +1,16 @@
 { $Id$ }
-unit ${unit_name}_mysql_dao;
+unit ${unit_name}MySQLDAO;
 
 interface
 
 uses
 ${uses_list}
-  connection,
+  Connection,
   DB,
   DBClient,
   Generics.Collections,
-  query,
-  query_executor;
+  Query,
+  QueryExecutor;
 
 type
   {**
@@ -23,16 +23,16 @@ type
   private
     fConnection: TConnection;
   protected
-    function readRow(const dataset: TClientDataSet): ${dao_class_name}; 
-    function getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
-    function getRow(var qry: TTBGQuery): ${dao_class_name};
-    function execute(var qry: TTBGQuery): TClientDataSet;
-    function querySingleResult(var qry: TTBGQuery): string;
+    function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
+    function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
+    function GetRow(var Query: TTBGQuery): ${dao_class_name};
+    function Execute(var Query: TTBGQuery): TClientDataSet;
+    function QuerySingleResult(var Query: TTBGQuery): string;
   public
     constructor Create(aConnection: TConnection);
-    function load(const id: Variant): ${dao_class_name};
-    function queryAll: TObjectList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
+    function Load(const Id: Variant): ${dao_class_name};
+    function QueryAll: TObjectList<${dao_class_name}>;
+    function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 ${query_by_definitions}
 end;
 
@@ -46,30 +46,30 @@ end;
 {**
  * Get Domain object by primary key
  *
- * @param String id primary key
+ * @param String Id primary key
  * @return ${dao_class_name}
  *}
-function ${type_name}.load(const id: Variant): ${dao_class_name};
+function ${type_name}.Load(const Id: Variant): ${dao_class_name};
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('SELECT * FROM ${table_name} WHERE ${pk} = :${pk}');
-  qry.paramByName('${pk}').Value := id;
-  Result := getRow(qry);
+  qry.paramByName('${pk}').Value := Id;
+  Result := GetRow(qry);
   qry.Free;
 end;
 
 {**
  * Get all records from view
  *}
-function ${type_name}.queryAll: TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAll: TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('SELECT * FROM ${table_name}');
-  Result := getList(qry);
+  Result := GetList(qry);
   qry.Free;
 end;
 	
@@ -78,13 +78,13 @@ end;
  *
  * @param orderColumn column name
  *}
-function ${type_name}.queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + orderColumn);
-  Result := getList(qry);
+  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + OrderColumn);
+  Result := GetList(qry);
   qry.Free;
 end;
 	
@@ -95,7 +95,7 @@ ${query_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.readRow(const dataset: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const Dataset: TClientDataSet): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
@@ -104,17 +104,17 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
 var
   dataset: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.execute(qry, fConnection);
+  dataset := TQueryExecutor.Execute(Query, fConnection);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
   while (not dataset.Eof) do
   begin
-    ${var_name}s.Add(readRow(dataset));
+    ${var_name}s.Add(ReadRow(dataset));
     dataset.Next;
   end;
   Result := ${var_name}s;  
@@ -126,29 +126,29 @@ end;
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.getRow(var qry: TTBGQuery): ${dao_class_name};
+function ${type_name}.GetRow(var Query: TTBGQuery): ${dao_class_name};
 var
   dataset: TClientDataSet;
 begin
-  dataset := TQueryExecutor.execute(qry, fConnection);
-  Result := readRow(dataset);
+  dataset := TQueryExecutor.Execute(Query, fConnection);
+  Result := ReadRow(dataset);
   dataset.Free;
 end; 
 	
 {**
  * Execute sql query
  *}
-function ${type_name}.execute(var qry: TTBGQuery): TClientDataSet;
+function ${type_name}.Execute(var Query: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.execute(qry, fConnection);
+  Result := TQueryExecutor.Execute(Query, fConnection);
 end; 
 
 {**
  * Query for one row and one column
  *}
-function ${type_name}.querySingleResult(var qry: TTBGQuery): string;
+function ${type_name}.QuerySingleResult(var Query: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(qry, fConnection);
+  Result := TQueryExecutor.queryForString(Query, fConnection);
 end; 
 
 end.

@@ -1,16 +1,16 @@
 { $Id$ }
-unit ${unit_name}_mysql_dao;
+unit ${unit_name}MySQLDAO;
 
 interface
 
 uses
 ${uses_list}
-  connection,
+  Connection,
   DB,
   DBClient,
   Generics.Collections,
-  query,
-  query_executor;
+  Query,
+  QueryExecutor;
 
 type
   {**
@@ -21,21 +21,21 @@ type
    *}
   ${type_name} = class(TInterfacedObject, ${interface_name})
   protected
-    function readRow(const dataset: TClientDataSet): ${dao_class_name}; 
-    function getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
-    function getRow(var qry: TTBGQuery): ${dao_class_name};
-    function execute(var qry: TTBGQuery): TClientDataSet;
-    function executeUpdate(var qry: TTBGQuery): Integer;
-    function querySingleResult(var qry: TTBGQuery): string;
-    function executeInsert(var qry: TTBGQuery): Integer;	
+    function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
+    function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
+    function GetRow(var Query: TTBGQuery): ${dao_class_name};
+    function Execute(var Query: TTBGQuery): TClientDataSet;
+    function ExecuteUpdate(var Query: TTBGQuery): Integer;
+    function QuerySingleResult(var Query: TTBGQuery): string;
+    function ExecuteInsert(var Query: TTBGQuery): Integer;	
   public
-    function load(const id: Variant): ${dao_class_name};
-    function queryAll: TObjectList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
-    function delete(const ${pk}: Variant): Integer;
-    function insert(var ${var_name}: ${dao_class_name}): Integer;
-    function update(var ${var_name}: ${dao_class_name}): Integer;
-    function clean: Integer;
+    function Load(const Id: Variant): ${dao_class_name};
+    function QueryAll: TObjectList<${dao_class_name}>;
+    function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
+    function Delete(const ${pk}: Variant): Integer;
+    function Insert(var ${var_name}: ${dao_class_name}): Integer;
+    function Update(var ${var_name}: ${dao_class_name}): Integer;
+    function Clean: Integer;
 ${public_functions}
 end;
 
@@ -44,45 +44,45 @@ implementation
 {**
  * Get Domain object by primary key
  *
- * @param String id primary key
+ * @param String Id primary key
  * @return ${dao_class_name}
  *}
-function ${type_name}.load(const ${pks}: Variant): ${dao_class_name};
+function ${type_name}.Load(const ${pks}: Variant): ${dao_class_name};
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('SELECT * FROM ${table_name} WHERE ${pk_where}');
   ${pk_set}
-  Result := getRow(qry);
+  Result := GetRow(qry);
   qry.Free;
 end;
 
 {**
  * Get all records from table
  *}
-function ${type_name}.queryAll: TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAll: TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('SELECT * FROM ${table_name}');
-  Result := getList(qry);
+  Result := GetList(qry);
   qry.Free;
 end;
 	
 {**
  * Get all records from table ordered by field
  *
- * @param orderColumn column name
+ * @param OrderColumn column name
  *}
-function ${type_name}.queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + orderColumn);
-  Result := getList(qry);
+  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + OrderColumn);
+  Result := GetList(qry);
   qry.Free;
 end;
 	
@@ -90,14 +90,14 @@ end;
  * Delete record from table
  * @param ${var_name} primary key
  *}
-function ${type_name}.delete(const ${pks}: Variant): Integer;
+function ${type_name}.Delete(const ${pks}: Variant): Integer;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('DELETE FROM ${table_name} WHERE ${pk_where}');
   ${pk_set}
-  Result := executeUpdate(qry);
+  Result := ExecuteUpdate(qry);
   qry.Free;
 end;
 	
@@ -106,7 +106,7 @@ end;
  *
  * @param ${dao_class_name} ${var_name}
  *}
-function ${type_name}.insert(var ${var_name}: ${dao_class_name}): Integer;
+function ${type_name}.Insert(var ${var_name}: ${dao_class_name}): Integer;
 var
   id: Integer;
   qry: TTBGQuery;
@@ -118,7 +118,7 @@ begin
   qry.sql.Add('(${insert_values2})');
 ${parameter_setter}
 ${pk_set_update}
-  id := executeInsert(qry);
+  id := ExecuteInsert(qry);
   Result := id;
   qry.Free;
 end;
@@ -128,7 +128,7 @@ end;
  *
  * @param ${dao_class_name} ${var_name}
  *}
-function ${type_name}.update(var ${var_name}: ${dao_class_name}): Integer;
+function ${type_name}.Update(var ${var_name}: ${dao_class_name}): Integer;
 var
   qry: TTBGQuery;
 begin
@@ -138,20 +138,20 @@ begin
   qry.sql.Add('WHERE ${pk_where}');
 ${parameter_setter}
 ${pk_set_update}
-  Result := executeUpdate(qry);
+  Result := ExecuteUpdate(qry);
   qry.Free;
 end;
 
 {**
  * Delete all rows
  *}
-function ${type_name}.clean: Integer;
+function ${type_name}.Clean: Integer;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('DELETE FROM ${table_name}');
-  Result := executeUpdate(qry);
+  Result := ExecuteUpdate(qry);
   qry.Free;
 end;
 
@@ -163,7 +163,7 @@ ${delete_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.readRow(const dataset: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const Dataset: TClientDataSet): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
@@ -172,17 +172,17 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.getList(var qry: TTBGQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
 var
   dataset: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.execute(qry);
+  dataset := TQueryExecutor.Execute(Query);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
   while (not dataset.Eof) do
   begin
-	${var_name}s.Add(readRow(dataset));
+	${var_name}s.Add(ReadRow(dataset));
     dataset.Next;
   end;
   Result := ${var_name}s;  
@@ -194,11 +194,11 @@ end;
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.getRow(var qry: TTBGQuery): ${dao_class_name};
+function ${type_name}.GetRow(var Query: TTBGQuery): ${dao_class_name};
 var
   dataset: TClientDataSet;
 begin
-  dataset := TQueryExecutor.execute(qry);
+  dataset := TQueryExecutor.Execute(Query);
   Result := readRow(dataset);
   dataset.Free;
 end; 
@@ -206,33 +206,33 @@ end;
 {**
  * Execute sql query
  *}
-function ${type_name}.execute(var qry: TTBGQuery): TClientDataSet;
+function ${type_name}.Execute(var Query: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.execute(qry);
+  Result := TQueryExecutor.Execute(Query);
 end; 
 
 {**
  * Execute sql query
  *}
-function ${type_name}.executeUpdate(var qry: TTBGQuery): Integer;
+function ${type_name}.ExecuteUpdate(var Query: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.executeUpdate(qry);
+  Result := TQueryExecutor.ExecuteUpdate(Query);
 end; 
 
 {**
  * Query for one row and one column
  *}
-function ${type_name}.querySingleResult(var qry: TTBGQuery): string;
+function ${type_name}.QuerySingleResult(var Query: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(qry);
+  Result := TQueryExecutor.queryForString(Query);
 end; 
 
 {**
  * Insert row to table
  *}
-function ${type_name}.executeInsert(var qry: TTBGQuery): Integer;
+function ${type_name}.ExecuteInsert(var Query: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.executeInsert(qry);
+  Result := TQueryExecutor.ExecuteInsert(Query);
 end; 
 
 end.

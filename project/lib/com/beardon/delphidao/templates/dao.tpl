@@ -1,16 +1,16 @@
 { $Id$ }
-unit ${unit_name}_mysql_dao;
+unit ${unit_name}MySQLDAO;
 
 interface
 
 uses
 ${uses_list}
-  connection,
+  Connection,
   DB,
   DBClient,
   Generics.Collections,
-  query,
-  query_executor;
+  Query,
+  QueryExecutor;
 
 type
   {**

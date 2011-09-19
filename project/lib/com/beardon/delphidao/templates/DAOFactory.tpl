@@ -1,10 +1,10 @@
 { $Id$ }
-unit dao_factory;
+unit DAOFactory;
 
 interface
 
 uses
-  connection,
+  Connection,
 ${uses_list}
 
 type
@@ -31,7 +31,7 @@ end;
 
 class destructor TDAOFactory.Destroy;
 begin
-  fConnection.close;
+  fConnection.Close;
   fConnection.Free;
 end;
 

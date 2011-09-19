@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}_dao;
+unit ${unit_name}DAO;
 
 interface
 
@@ -15,9 +15,9 @@ type
    * @date: ${date}
    *}
   ${type_name} = Interface(IInterface)
-    function load(const id: Variant): ${dao_class_name};
-    function queryAll: TObjectList<${dao_class_name}>;
-    function queryAllOrderBy(const orderColumn: string): TObjectList<${dao_class_name}>;
+    function Load(const Id: Variant): ${dao_class_name};
+    function QueryAll: TObjectList<${dao_class_name}>;
+    function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 ${query_by_definitions}
 end;
 

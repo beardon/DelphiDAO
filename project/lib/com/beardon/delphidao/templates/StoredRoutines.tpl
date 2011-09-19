@@ -1,12 +1,12 @@
 { $Id$ }
-unit stored_routines;
+unit StoredRoutines;
 
 interface
 
 uses
   DBClient,
-  query,
-  query_executor;
+  Query,
+  QueryExecutor;
 
 type
   {**
