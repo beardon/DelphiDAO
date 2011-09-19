@@ -2,7 +2,7 @@ program DelphiDAOGUI;
 
 uses
   Forms,
-  Main in 'Main.pas' {frmMain},
+  MainFrm in 'MainFrm.pas' {frmMain},
   Template in 'lib\com\beardon\delphidao\templates\class\Template.pas',
   Generator in 'lib\com\beardon\delphidao\Generator.pas',
   ArrayList in 'lib\com\beardon\delphidao\templates\class\dao\core\ArrayList.pas',

@@ -20,8 +20,12 @@ var
   path: string;
 
 begin
+  path := ParamStr(1);
   try
-    path := ExtractFilePath(Application.ExeName);
+    if (path = '') then
+    begin
+      path := ExtractFilePath(Application.ExeName);
+    end;
     TGenerator.Generate(path);
     { TODO -oUser -cConsole Main : Insert code here }
   except

@@ -53,7 +53,7 @@
 			<DelphiCompile Include="DelphiDAOGUI.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="Main.pas">
+			<DCCReference Include="MainFrm.pas">
 				<Form>frmMain</Form>
 			</DCCReference>
 			<DCCReference Include="lib\com\beardon\delphidao\templates\class\Template.pas"/>
