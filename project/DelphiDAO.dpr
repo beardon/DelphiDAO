@@ -1,4 +1,4 @@
-program DelphiDAOConsole;
+program DelphiDAO;
 
 {$APPTYPE CONSOLE}
 
