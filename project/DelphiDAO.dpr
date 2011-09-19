@@ -33,11 +33,11 @@ begin
   begin
     if (LeftStr(ParamStr(i), 2) = OUTPUT_PATH_PARAM) then
     begin
-      OutputPath := Copy(ParamStr(i), 2, MaxInt);
+      OutputPath := Copy(ParamStr(i), 3, MaxInt);
     end;
     if (LeftStr(ParamStr(i), 2) = TEMPLATE_PATH_PARAM) then
     begin
-      TemplatePath := Copy(ParamStr(i), 2, MaxInt);
+      TemplatePath := Copy(ParamStr(i), 3, MaxInt);
     end;
   end;
   if (OutputPath = '') then
