@@ -7,9 +7,9 @@ type
   private
     const HOST: string = 'localhost';
     const PORT: Integer = 3306;
-    const USER: string = 'username';
+    const USER: string = 'user';
     const PASSWORD: string = 'password';
-    const DATABASE: string = 'ceat_ce';
+    const DATABASE: string = 'database';
   public
     class function GetHost: string; static;
     class function GetPort: Integer; static;
