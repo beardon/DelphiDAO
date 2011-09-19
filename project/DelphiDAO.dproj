@@ -26,7 +26,7 @@
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_Define>CONSOLE;$(DCC_Define)</DCC_Define>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DcuOutput>.\$(Config)\$(Platform)</DCC_DcuOutput>
+			<DCC_DcuOutput>..\dcu\DelphiXE\build\</DCC_DcuOutput>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_ExeOutput>..\output\DelphiXE\build\</DCC_ExeOutput>
 			<DCC_E>false</DCC_E>
@@ -36,6 +36,7 @@
 			<DCC_K>false</DCC_K>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_DcuOutput>..\dcu\DelphiXE\debug\</DCC_DcuOutput>
 			<DCC_ExeOutput>..\output\DelphiXE\debug\</DCC_ExeOutput>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
