@@ -14,14 +14,14 @@ type
   end;
   TGenerator = class
   private
-    class procedure Init(Path: string);
+    class procedure Init(OutputPath, TemplatePath: string);
     class function DoesTableContainPK(const TableName: string): Boolean;
-    class procedure CreateDAOFactory(const Dataset: TClientDataSet; const Path: string);
-    class procedure GenerateDTOObjects(const Dataset: TClientDataSet; const Path: string);
-    class procedure GenerateDAOExtObjects(const Dataset: TClientDataSet; const Path: string);
-    class procedure GenerateDAOObjects(const Dataset: TClientDataSet; const Path: string);
-    class procedure GenerateIDAOObjects(const Dataset: TClientDataSet; const Path: string);
-    class procedure GenerateStoredRoutines(const Path: string);
+    class procedure CreateDAOFactory(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDTOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDAOExtObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateIDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateStoredRoutines(const OutputPath, TemplatePath: string);
     class function GetFields(const TableName: string): TClientDataSet;
     class function LowerCamelCase(const Value: string): string;
     class function UpperCamelCase(const Value: string): string;
@@ -32,7 +32,7 @@ type
     class function GetRoutineReturnType(const CreateSQL: string): string;
     class function ConcatLongString(const InStr: string; const Multiline: Boolean): string;
   public
-    class procedure Generate(Path: string); static;
+    class procedure Generate(OutputPath, TemplatePath: string); static;
   end;
 
 implementation
@@ -52,49 +52,48 @@ const
   CRLF2 = CRLF + CRLF;
   TAB = '  ';
   TAB2 = TAB + TAB;
-  TEMPLATE_PATH = '..\..\..\project\lib\com\beardon\delphidao\templates\';
 
-class procedure TGenerator.Generate(Path: string);
+class procedure TGenerator.Generate(OutputPath, TemplatePath: string);
 var
   qry: TTBGQuery;
   ds: TClientDataSet;
 begin
-  Init(Path);
+  Init(OutputPath, TemplatePath);
   qry := TTBGQuery.Create;
   qry.SQL.Add('SHOW TABLES');
   ds := TQueryExecutor.Execute(qry);
   qry.Free;
-  GenerateDTOObjects(ds, Path);
-	GenerateDAOObjects(ds, Path);
-	GenerateDAOExtObjects(ds, Path);
-	GenerateIDAOObjects(ds, Path);
-	CreateDAOFactory(ds, Path);
-  GenerateStoredRoutines(Path);
+  GenerateDTOObjects(ds, OutputPath, TemplatePath);
+	GenerateDAOObjects(ds, OutputPath, TemplatePath);
+	GenerateDAOExtObjects(ds, OutputPath, TemplatePath);
+	GenerateIDAOObjects(ds, OutputPath, TemplatePath);
+	CreateDAOFactory(ds, OutputPath, TemplatePath);
+  GenerateStoredRoutines(OutputPath, TemplatePath);
   ds.Free;
 end;
 
-class procedure TGenerator.Init(Path: string);
+class procedure TGenerator.Init(OutputPath, TemplatePath: string);
 begin
-	CreateDir(Path);
-	CreateDir(Path + '\class');
-	CreateDir(Path + '\class\dto');
-	CreateDir(Path + '\class\mysql');
-	CreateDir(Path + '\class\mysql\ext');
-	CreateDir(Path + '\class\sql');
-	CreateDir(Path + '\class\dao');
-	CreateDir(Path + '\class\core');
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\sql\Connection.pas'), PChar(Path + '\class\sql\Connection.pas'), False);
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\sql\ConnectionFactory.pas'), PChar(Path + '\class\sql\ConnectionFactory.pas'), False);
+	CreateDir(OutputPath);
+	CreateDir(OutputPath + '\class');
+	CreateDir(OutputPath + '\class\dto');
+	CreateDir(OutputPath + '\class\mysql');
+	CreateDir(OutputPath + '\class\mysql\ext');
+	CreateDir(OutputPath + '\class\sql');
+	CreateDir(OutputPath + '\class\dao');
+	CreateDir(OutputPath + '\class\core');
+  CopyFile(PChar(TemplatePath + '\class\dao\sql\Connection.pas'), PChar(OutputPath + '\class\sql\Connection.pas'), False);
+  CopyFile(PChar(TemplatePath + '\class\dao\sql\ConnectionFactory.pas'), PChar(OutputPath + '\class\sql\ConnectionFactory.pas'), False);
   // do not overwrite connection properties if they already exist
-  if (not FileExists(Path + '\class\sql\ConnectionProperty.pas')) then
+  if (not FileExists(OutputPath + '\class\sql\ConnectionProperty.pas')) then
   begin
-    CopyFile(PChar(TEMPLATE_PATH + 'ConnectionProperty.tpl'), PChar(Path + '\class\sql\ConnectionProperty.pas'), False);
+    CopyFile(PChar(TemplatePath + '\ConnectionProperty.tpl'), PChar(OutputPath + '\class\sql\ConnectionProperty.pas'), False);
   end;
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\sql\Query.pas'), PChar(Path + '\class\sql\Query.pas'), False);
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\sql\QueryExecutor.pas'), PChar(Path + '\class\sql\QueryExecutor.pas'), False);
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\sql\QueryFactory.pas'), PChar(Path + '\class\sql\QueryFactory.pas'), False);
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\sql\Transaction.pas'), PChar(Path + '\class\sql\Transaction.pas'), False);
-  CopyFile(PChar(TEMPLATE_PATH + 'class\dao\core\ArrayList.pas'), PChar(Path + '\class\core\ArrayList.pas'), False);
+  CopyFile(PChar(TemplatePath + '\class\dao\sql\Query.pas'), PChar(OutputPath + '\class\sql\Query.pas'), False);
+  CopyFile(PChar(TemplatePath + '\class\dao\sql\QueryExecutor.pas'), PChar(OutputPath + '\class\sql\QueryExecutor.pas'), False);
+  CopyFile(PChar(TemplatePath + '\class\dao\sql\QueryFactory.pas'), PChar(OutputPath + '\class\sql\QueryFactory.pas'), False);
+  CopyFile(PChar(TemplatePath + '\class\dao\sql\Transaction.pas'), PChar(OutputPath + '\class\sql\Transaction.pas'), False);
+  CopyFile(PChar(TemplatePath + '\class\dao\core\ArrayList.pas'), PChar(OutputPath + '\class\core\ArrayList.pas'), False);
 end;
 
 class function TGenerator.DoesTableContainPK(const TableName: string): Boolean;
@@ -116,7 +115,7 @@ begin
   Result := success;
 end;
 
-class procedure TGenerator.CreateDAOFactory(const Dataset: TClientDataSet; const Path: string);
+class procedure TGenerator.CreateDAOFactory(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName,
   usesList, functionDeclarations, implementationCode: string;
@@ -125,7 +124,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  Write('Generating ' + '"' + Path + '\class\dao\DAOFactory.pas"...');
+  Write('Generating ' + '"' + OutputPath + '\class\dao\DAOFactory.pas"...');
   with (Dataset) do
   begin
     First;
@@ -145,12 +144,12 @@ begin
     usesList := LeftStr(usesList, Length(usesList) - 3) + ';';
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
     implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(TEMPLATE_PATH + 'DAOFactory.tpl');
+    template := TTemplate.Create(TemplatePath + '\DAOFactory.tpl');
     template.SetPair('uses_list', usesList);
     template.SetPair('function_declarations', functionDeclarations);
     template.SetPair('implementation_code', implementationCode);
     template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-    template.Write('' + Path + '\class\dao\DAOFactory.pas');
+    template.Write('' + OutputPath + '\class\dao\DAOFactory.pas');
     template.Free;
     WriteLn(' done.');
   end;
@@ -159,7 +158,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDTOObjects(const Dataset: TClientDataSet; const Path: string);
+class procedure TGenerator.GenerateDTOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName,
   typeName, privateVars, publicConstants, publicProperties,
@@ -177,8 +176,8 @@ begin
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
       tableClassName := UpperCamelCase(tableName);
-      Write('Generating ' + '"' + Path + '\class\dto\' + tableClassName + '.pas"...');
-      template := TTemplate.Create(TEMPLATE_PATH + 'DTO.tpl');
+      Write('Generating ' + '"' + OutputPath + '\class\dto\' + tableClassName + '.pas"...');
+      template := TTemplate.Create(TemplatePath + '\DTO.tpl');
       template.SetPair('unit_name', tableClassName);
       template.SetPair('table_name', tableName);
       typeName := 'T' + tableClassName;
@@ -203,7 +202,7 @@ begin
       template.SetPair('private_vars', privateVars);
       template.SetPair('public_properties', publicProperties);
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-      template.Write('' + Path + '\class\dto\' + tableClassName + '.pas');
+      template.Write('' + OutputPath + '\class\dto\' + tableClassName + '.pas');
       template.Free;
       WriteLn(' done.');
       Next;
@@ -214,7 +213,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDAOExtObjects(const Dataset: TClientDataSet; const Path: string);
+class procedure TGenerator.GenerateDAOExtObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName,
   typeName, ancestorTypeName, usesList: string;
@@ -230,11 +229,11 @@ begin
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
       tableClassName := UpperCamelCase(tableName);
-      if (not FileExists('' + Path + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas')) then
+      if (not FileExists('' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas')) then
       begin
-        Write('Generating ' + '"' + Path + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas"...');
+        Write('Generating ' + '"' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas"...');
         usesList := TAB + tableClassName + 'MySQLDAO;';
-        template := TTemplate.Create(TEMPLATE_PATH + 'DAOExt.tpl');
+        template := TTemplate.Create(TemplatePath + '\DAOExt.tpl');
         template.SetPair('unit_name', tableClassName);
         template.SetPair('uses_list', usesList);
         template.SetPair('table_name', tableName);
@@ -243,13 +242,13 @@ begin
         template.SetPair('type_name', typeName);
         template.SetPair('ancestor_type_name', ancestorTypeName);
         template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-        template.Write('' + Path + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas');
+        template.Write('' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas');
         template.Free;
         WriteLn(' done.');
       end
       else
       begin
-        WriteLn('"' + Path + '\class\mysql\ext\' + tableName + 'MySQLExtDAO.pas" already exists.');
+        WriteLn('"' + OutputPath + '\class\mysql\ext\' + tableName + 'MySQLExtDAO.pas" already exists.');
       end;
       Next;
     end;
@@ -259,7 +258,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDAOObjects(const Dataset: TClientDataSet; const Path: string);
+class procedure TGenerator.GenerateDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   i: Integer;
   tableName, tableClassName, usesList, interfaceName,
@@ -283,7 +282,7 @@ begin
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
       tableClassName := UpperCamelCase(tableName);
-      Write('Generating ' + '"' + Path + '\class\mysql\' + tableClassName + 'MySQLDAO.pas"...');
+      Write('Generating ' + '"' + OutputPath + '\class\mysql\' + tableClassName + 'MySQLDAO.pas"...');
       hasPK := DoesTableContainPK(tableName);
       ds := GetFields(tableName);
       parameterSetter := CRLF;
@@ -346,16 +345,16 @@ begin
       begin
         if (Length(pks) = 1) then
         begin
-          template := TTemplate.Create(TEMPLATE_PATH + 'DAO.tpl');
+          template := TTemplate.Create(TemplatePath + '\DAO.tpl');
         end
         else
         begin
-          template := TTemplate.Create(TEMPLATE_PATH + 'DAOComplexPK.tpl');
+          template := TTemplate.Create(TemplatePath + '\DAOComplexPK.tpl');
         end;
       end
       else
       begin
-        template := TTemplate.Create(TEMPLATE_PATH + 'DAOView.tpl');
+        template := TTemplate.Create(TemplatePath + '\DAOView.tpl');
       end;
       template.SetPair('dao_class_name', 'T' + tableClassName);
       template.SetPair('table_name', tableName);
@@ -437,7 +436,7 @@ begin
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
       template.SetPair('query_by_definitions', queryByDef);
       template.SetPair('query_by_functions', queryByFunc);
-      template.Write('' + Path + '\class\mysql\' + tableClassName + 'MySQLDAO.pas');
+      template.Write('' + OutputPath + '\class\mysql\' + tableClassName + 'MySQLDAO.pas');
       template.Free;
       WriteLn(' done.');
       Next;
@@ -448,7 +447,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateIDAOObjects(const Dataset: TClientDataSet; const Path: string);
+class procedure TGenerator.GenerateIDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   i: Integer;
   tableName, tableClassName, usesList,
@@ -470,7 +469,7 @@ begin
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
       tableClassName := UpperCamelCase(tableName);
-      Write('Generating ' + '"' + Path + '\class\dao\' + tableClassName + 'DAO.pas"...');
+      Write('Generating ' + '"' + OutputPath + '\class\dao\' + tableClassName + 'DAO.pas"...');
       hasPK := DoesTableContainPK(tableName);
       ds := GetFields(tableName);
       pk := '';
@@ -501,16 +500,16 @@ begin
       begin
         if (Length(pks) = 1) then
         begin
-          template := TTemplate.Create(TEMPLATE_PATH + 'IDAO.tpl');
+          template := TTemplate.Create(TemplatePath + '\IDAO.tpl');
         end
         else
         begin
-          template := TTemplate.Create(TEMPLATE_PATH + 'IDAOComplexPK.tpl');
+          template := TTemplate.Create(TemplatePath + '\IDAOComplexPK.tpl');
         end;
       end
       else
       begin
-        template := TTemplate.Create(TEMPLATE_PATH + 'IDAOView.tpl');
+        template := TTemplate.Create(TemplatePath + '\IDAOView.tpl');
       end;
       template.SetPair('dao_class_name', 'T' + tableClassName);
       template.SetPair('table_name', tableName);
@@ -553,7 +552,7 @@ begin
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
       queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
       template.SetPair('query_by_definitions', queryByDef);
-      template.Write('' + Path + '\class\dao\' + tableClassName + 'DAO.pas');
+      template.Write('' + OutputPath + '\class\dao\' + tableClassName + 'DAO.pas');
       template.Free;
       WriteLn(' done.');
       Next;
@@ -570,7 +569,7 @@ end;
  * (note: this requires that the user is the owner of the routine, or have SELECT access to the mysql.proc table)
  * @param Path file output path
  *}
-class procedure TGenerator.GenerateStoredRoutines(const Path: string);
+class procedure TGenerator.GenerateStoredRoutines(const OutputPath, TemplatePath: string);
 var
   routineName, delphiRoutineName, createSQL, funcParams, sqlParams, comment,
   sqlReturnType, delphiReturnType,
@@ -584,7 +583,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  Write('Generating ' + '"' + Path + '\class\StoredRoutines.pas"...');
+  Write('Generating ' + '"' + OutputPath + '\class\StoredRoutines.pas"...');
   qry := TTBGQuery.Create;
   qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + TConnectionProperty.GetDatabase + '"');
   ds := TQueryExecutor.Execute(qry);
@@ -703,11 +702,11 @@ begin
     end;
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
     implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(TEMPLATE_PATH + 'StoredRoutines.tpl');
+    template := TTemplate.Create(TemplatePath + '\StoredRoutines.tpl');
     template.SetPair('function_declarations', functionDeclarations);
     template.SetPair('implementation_code', implementationCode);
     template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-    template.Write('' + Path + '\class\StoredRoutines.pas');
+    template.Write('' + OutputPath + '\class\StoredRoutines.pas');
     template.Free;
     WriteLn(' done.');
   end;
