@@ -828,7 +828,7 @@ end;
 
 class function TGenerator.FixReservedWords(const Value: string): string;
 const
-  RESERVED_WORDS = 'ClassTypeUnitName';
+  RESERVED_WORDS = 'ClassTypeUnitNameLabel';
 var
   corrected: string;
 begin
