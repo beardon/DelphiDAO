@@ -15,7 +15,9 @@ uses
   Query in 'lib\com\beardon\delphidao\templates\class\dao\sql\Query.pas',
   QueryExecutor in 'lib\com\beardon\delphidao\templates\class\dao\sql\QueryExecutor.pas',
   QueryFactory in 'lib\com\beardon\delphidao\templates\class\dao\sql\QueryFactory.pas',
-  Transaction in 'lib\com\beardon\delphidao\templates\class\dao\sql\Transaction.pas';
+  Transaction in 'lib\com\beardon\delphidao\templates\class\dao\sql\Transaction.pas',
+  Inflector in 'lib\com\beardon\active_support\Inflector.pas',
+  Delphinator in 'lib\com\beardon\active_support\Delphinator.pas';
 
 var
   OutputPath: string;
@@ -23,7 +25,7 @@ var
 
 procedure ProcessParameters;
 const
-  DEFAULT_TEMPLATE_PATH = '..\..\..\project\lib\com\beardon\delphidao\templates\';
+  DEFAULT_TEMPLATE_PATH = '..\..\..\project\lib\com\beardon\delphidao\templates';
   OUTPUT_PATH_PARAM = '-o';
   TEMPLATE_PATH_PARAM = '-t';
 var
