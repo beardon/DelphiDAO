@@ -320,7 +320,7 @@ begin
           queryByFunc := queryByFunc + 'begin' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry := TTBGQuery.Create;' + CRLF;
           queryByFunc := queryByFunc + TAB + 'if (IsLike) then' + CRLF;
-          queryByFunc := queryByFunc + TAB2 + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' LIKE %:' + fieldMemberName + '%'');' + CRLF;
+          queryByFunc := queryByFunc + TAB2 + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' LIKE %:' + fieldMemberName + '%'')' + CRLF;
           queryByFunc := queryByFunc + TAB + 'else' + CRLF;
           queryByFunc := queryByFunc + TAB2 + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' = :' + fieldMemberName + ''');' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' = :' + fieldMemberName + ''');' + CRLF;
