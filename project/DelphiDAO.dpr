@@ -17,7 +17,8 @@ uses
   QueryFactory in 'lib\com\beardon\delphidao\templates\class\dao\sql\QueryFactory.pas',
   Transaction in 'lib\com\beardon\delphidao\templates\class\dao\sql\Transaction.pas',
   Inflector in 'lib\com\beardon\active_support\Inflector.pas',
-  Delphinator in 'lib\com\beardon\active_support\Delphinator.pas';
+  Delphinator in 'lib\com\beardon\active_support\Delphinator.pas',
+  Inflectors in 'lib\com\beardon\active_support\Inflectors.pas';
 
 var
   OutputPath: string;

@@ -313,12 +313,16 @@ begin
           updateFields := updateFields + fieldName + ' = :' + fieldMemberName + ', ';
           insertValues := insertValues + ':' + fieldMemberName + ', ';
           parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := ' + tableClassName + '.' + fieldMemberName + ';' + CRLF;
-          queryByDef := queryByDef + TAB2 + 'function QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '): TObjectList<T' + tableClassName + '>;' + CRLF;
-          queryByFunc := queryByFunc + 'function T' + tableClassName + 'MySQLDAO.QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '): TObjectList<T' + tableClassName + '>;' + CRLF;
+          queryByDef := queryByDef + TAB2 + 'function QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '; const IsLike: Boolean): TObjectList<T' + tableClassName + '>;' + CRLF;
+          queryByFunc := queryByFunc + 'function T' + tableClassName + 'MySQLDAO.QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '; const IsLike: Boolean): TObjectList<T' + tableClassName + '>;' + CRLF;
           queryByFunc := queryByFunc + 'var' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry: TTBGQuery;' + CRLF;
           queryByFunc := queryByFunc + 'begin' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+          queryByFunc := queryByFunc + TAB + 'if (IsLike) then' + CRLF;
+          queryByFunc := queryByFunc + TAB2 + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' LIKE %:' + fieldMemberName + '%'');' + CRLF;
+          queryByFunc := queryByFunc + TAB + 'else' + CRLF;
+          queryByFunc := queryByFunc + TAB2 + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' = :' + fieldMemberName + ''');' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry.sql.Add(''SELECT * FROM ' + tableName + ' WHERE ' + fieldName + ' = :' + fieldMemberName + ''');' + CRLF;
           queryByFunc := queryByFunc + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := Value;' + CRLF;
           queryByFunc := queryByFunc + TAB + 'Result := getList(qry);' + CRLF;
@@ -490,7 +494,7 @@ begin
         end
         else
         begin
-          queryByDef := queryByDef + TAB2 + 'function QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '): TObjectList<T' + tableClassName + '>;' + CRLF;
+          queryByDef := queryByDef + TAB2 + 'function QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '; const IsLike: Boolean): TObjectList<T' + tableClassName + '>;' + CRLF;
           deleteByDef := deleteByDef + TAB2 + 'function DeleteBy' + fieldMemberName + '(const Value: ' + delphiType + '): Integer;' + CRLF;
         end;
         Next;
