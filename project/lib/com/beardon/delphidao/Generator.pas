@@ -506,6 +506,8 @@ begin
         else
         begin
           queryByDef := queryByDef + TAB2 + 'function QueryBy' + fieldMemberName + '(const Value: ' + delphiType + '; const IsLike: Boolean): TObjectList<T' + tableClassName + '>;' + CRLF;
+          if (delphiType = 'string') then
+            queryByDef := queryByDef + TAB2 + 'function QueryByLike' + fieldMemberName + '(const Value: ' + delphiType + '; const IsLike: Boolean): TObjectList<T' + tableClassName + '>;' + CRLF;
           deleteByDef := deleteByDef + TAB2 + 'function DeleteBy' + fieldMemberName + '(const Value: ' + delphiType + '): Integer;' + CRLF;
         end;
         Next;
