@@ -18,7 +18,9 @@ uses
   Transaction in 'lib\com\beardon\delphidao\templates\class\dao\sql\Transaction.pas',
   Inflector in 'lib\com\beardon\active_support\Inflector.pas',
   Delphinator in 'lib\com\beardon\active_support\Delphinator.pas',
-  Inflectors in 'lib\com\beardon\active_support\Inflectors.pas';
+  Inflectors in 'lib\com\beardon\active_support\Inflectors.pas',
+  SQLComparisonOperator in 'lib\com\beardon\delphidao\templates\class\dao\sql\SQLComparisonOperator.pas',
+  SQLOrderDirection in 'lib\com\beardon\delphidao\templates\class\dao\sql\SQLOrderDirection.pas';
 
 var
   OutputPath: string;

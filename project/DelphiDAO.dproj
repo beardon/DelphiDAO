@@ -65,6 +65,8 @@
 			<DCCReference Include="lib\com\beardon\active_support\Inflector.pas"/>
 			<DCCReference Include="lib\com\beardon\active_support\Delphinator.pas"/>
 			<DCCReference Include="lib\com\beardon\active_support\Inflectors.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\SQLComparisonOperator.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\SQLOrderDirection.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
