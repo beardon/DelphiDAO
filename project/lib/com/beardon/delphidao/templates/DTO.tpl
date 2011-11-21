@@ -4,6 +4,7 @@ unit ${unit_name};
 interface
 
 type
+  ${pointer_type_name} = ^${type_name};
   {**
    * Object represents table '${table_name}'.
    *

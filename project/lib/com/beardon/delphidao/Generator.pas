@@ -220,7 +220,7 @@ end;
 class procedure TGenerator.GenerateDTOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName,
-  typeName, privateVars, publicConstants, publicProperties,
+  typeName, pointerTypeName, privateVars, publicConstants, publicProperties,
   fieldName, fieldMemberName, thisType: string;
   template: TTemplate;
   ds: TClientDataSet;
@@ -240,7 +240,9 @@ begin
       template.SetPair('unit_name', tableClassName);
       template.SetPair('table_name', tableName);
       typeName := 'T' + tableClassName;
+      pointerTypeName := 'P' + tableClassName;
       template.SetPair('type_name', typeName);
+      template.SetPair('pointer_type_name', pointerTypeName);
       publicConstants := TAB2 + 'const TABLE_NAME = ''' + tableName + ''';';
       template.SetPair('public_constants', publicConstants);
       privateVars := '';
