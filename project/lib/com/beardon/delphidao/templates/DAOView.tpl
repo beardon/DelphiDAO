@@ -10,7 +10,9 @@ ${uses_list}
   DBClient,
   Generics.Collections,
   Query,
-  QueryExecutor;
+  QueryExecutor,
+  SQLComparisonOperator,
+  SQLOrderDirection;
 
 type
   {**
@@ -21,7 +23,8 @@ type
    *}
   ${type_name} = class(TInterfacedObject, ${interface_name})
   private
-    fConnection: TConnection;
+    const INDEX_FIELD_MAP: ${mapping_array};
+    var fConnection: TConnection;
   protected
     function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
     function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
@@ -29,6 +32,7 @@ type
     function Execute(var Query: TTBGQuery): TClientDataSet;
     function QuerySingleResult(var Query: TTBGQuery): string;
   public
+${index_constants}
     constructor Create(aConnection: TConnection);
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;

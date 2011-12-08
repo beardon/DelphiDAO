@@ -366,9 +366,9 @@ end;
 class procedure TGenerator.GenerateDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   i: Integer;
-  tableName, tableClassName, usesList, interfaceName,
+  tableName, tableClassName, usesList, interfaceName, firstIndex,
   typeName, privateVars, publicConstants, publicProperties,
-  fieldName, fieldMemberName, delphiType, asType, s, s2, s3, s4: string;
+  fieldName, fieldMemberName, sqlType, delphiType, asType, s, s2, s3, s4: string;
   parameterSetter, insertFields, insertFields2, updateFields, insertValues,
   insertValues2, readRow, pk, queryByDef, deleteByDef,
   mappingArray, indexConstants,
@@ -393,6 +393,10 @@ begin
       hasPK := DoesTableContainPK(tableName);
       ds := GetFields(tableName);
       indices := GetIndices(tableName);
+      if (indices.Count > 0) then
+        firstIndex := indices[0]
+      else
+        firstIndex := ds.FieldByName('Field').AsString;
       parameterSetter := CRLF;
       insertFields := '';
       updateFields := '';
@@ -409,8 +413,9 @@ begin
       begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
-        delphiType := TDelphinator.MySQLTypeToDelphiType(FieldByName('Type').AsString);
-        asType := TDelphinator.MySQLTypeToDelphiAsType(FieldByName('Type').AsString);
+        sqlType := FieldByName('Type').AsString;
+        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType);
+        asType := TDelphinator.MySQLTypeToDelphiAsType(sqlType);
         if (FieldByName('Key').AsString = 'PRI') then
         begin
           pk := fieldName;
@@ -419,14 +424,17 @@ begin
         end
         else
         begin
-          insertFields := insertFields + fieldName + ', ';
-          updateFields := updateFields + fieldName + ' = :' + fieldMemberName + ', ';
-          insertValues := insertValues + ':' + fieldMemberName + ', ';
-          parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := ' + tableClassName + '.' + fieldMemberName + ';' + CRLF;
-          queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldName, delphiType, True, indices[0]);
-          queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, delphiType, indices[0]);
-          deleteByDef := deleteByDef + CreateDeleteByDefinition(fieldName, delphiType);
-          deleteByFunc := deleteByFunc + CreateDeleteByFunction(tableName, fieldName, delphiType);
+          if (sqlType <> 'timestamp') then
+          begin
+            insertFields := insertFields + fieldName + ', ';
+            updateFields := updateFields + fieldName + ' = :' + fieldMemberName + ', ';
+            insertValues := insertValues + ':' + fieldMemberName + ', ';
+            parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := ' + tableClassName + '.' + fieldMemberName + ';' + CRLF;
+            deleteByDef := deleteByDef + CreateDeleteByDefinition(fieldName, delphiType);
+            deleteByFunc := deleteByFunc + CreateDeleteByFunction(tableName, fieldName, delphiType);
+          end;
+          queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldName, delphiType, True, firstIndex);
+          queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, delphiType, firstIndex);
         end;
         readRow := readRow + TAB + tableClassName + '.' + fieldMemberName + ' := dataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
@@ -447,11 +455,19 @@ begin
       begin
         template := TTemplate.Create(TemplatePath + '\DAOView.tpl');
       end;
-      mappingArray := 'array[0..' + IntToStr(indices.Count - 1) + '] of string = (''' + StringReplace(indices.DelimitedText, ',', ''',''', [rfReplaceAll]) + ''')';
       indexConstants := '';
-      for i := 0 to indices.Count - 1 do
+      if (indices.Count > 0) then
       begin
-        indexConstants := indexConstants + TAB2 + 'const INDEX_' + UpperCase(indices[i]) + ' = ' + IntToStr(i) + ';' + CRLF;
+        mappingArray := 'array[0..' + IntToStr(indices.Count - 1) + '] of string = (''' + StringReplace(indices.DelimitedText, ',', ''',''', [rfReplaceAll]) + ''')';
+        for i := 0 to indices.Count - 1 do
+        begin
+          indexConstants := indexConstants + TAB2 + 'const INDEX_' + UpperCase(indices[i]) + ' = ' + IntToStr(i) + ';' + CRLF;
+        end;
+      end
+      else
+      begin
+        mappingArray := 'array[0..0] of string = (''' + firstIndex + ''')';
+        indexConstants := indexConstants + TAB2 + 'const INDEX_' + UpperCase(firstIndex) + ' = 0;' + CRLF;
       end;
       indices.Free;
       template.SetPair('dao_class_name', 'T' + tableClassName);
@@ -552,7 +568,7 @@ class procedure TGenerator.GenerateIDAOObjects(const Dataset: TClientDataSet; co
 var
   i: Integer;
   tableName, tableClassName, usesList,
-  typeName, fieldName, fieldMemberName, delphiType, asType: string;
+  typeName, fieldName, fieldMemberName, sqlType, delphiType, asType: string;
   s, s2, s3, s4: string;
   pk, queryByDef, deleteByDef: string;
   pks: array of string;
@@ -582,8 +598,9 @@ begin
       begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
-        delphiType := TDelphinator.MySQLTypeToDelphiType(FieldByName('Type').AsString);
-        asType := TDelphinator.MySQLTypeToDelphiAsType(FieldByName('Type').AsString);
+        sqlType := FieldByName('Type').AsString;
+        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType);
+        asType := TDelphinator.MySQLTypeToDelphiAsType(sqlType);
         if (FieldByName('Key').AsString = 'PRI') then
         begin
           pk := fieldName;
@@ -592,8 +609,11 @@ begin
         end
         else
         begin
+          if (sqlType <> 'timestamp') then
+          begin
+            deleteByDef := deleteByDef + TAB2 + 'function DeleteBy' + fieldMemberName + '(const Value: ' + delphiType + '): Integer;' + CRLF;
+          end;
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldName, delphiType, False);
-          deleteByDef := deleteByDef + TAB2 + 'function DeleteBy' + fieldMemberName + '(const Value: ' + delphiType + '): Integer;' + CRLF;
         end;
         Next;
       end;
