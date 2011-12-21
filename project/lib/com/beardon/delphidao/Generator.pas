@@ -254,8 +254,8 @@ begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
         thisType := TDelphinator.MySQLTypeToDelphiType(FieldByName('Type').AsString);
-        privateVars := privateVars + TAB2 + 'f' + fieldMemberName + ': ' + thisType + ';' + CRLF;
-        publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + thisType + ' read f' + fieldMemberName + ' write f' + fieldMemberName + ';' + CRLF;
+        privateVars := privateVars + TAB2 + 'F' + fieldMemberName + ': ' + thisType + ';' + CRLF;
+        publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + thisType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
         Next;
       end;
       ds.Free;

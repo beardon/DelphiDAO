@@ -24,7 +24,7 @@ type
   ${type_name} = class(TInterfacedObject, ${interface_name})
   private
     const INDEX_FIELD_MAP: ${mapping_array};
-    var fConnection: TConnection;
+    var FConnection: TConnection;
   protected
     function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
     function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
@@ -44,7 +44,7 @@ implementation
 
 constructor ${type_name}.Create(aConnection: TConnection);
 begin
-  fConnection := aConnection;
+  FConnection := aConnection;
 end;
 
 {**
@@ -113,7 +113,7 @@ var
   dataset: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.Execute(Query, fConnection);
+  dataset := TQueryExecutor.Execute(Query, FConnection);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
   while (not dataset.Eof) do
@@ -134,7 +134,7 @@ function ${type_name}.GetRow(var Query: TTBGQuery): ${dao_class_name};
 var
   dataset: TClientDataSet;
 begin
-  dataset := TQueryExecutor.Execute(Query, fConnection);
+  dataset := TQueryExecutor.Execute(Query, FConnection);
   Result := ReadRow(dataset);
   dataset.Free;
 end; 
@@ -144,7 +144,7 @@ end;
  *}
 function ${type_name}.Execute(var Query: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.Execute(Query, fConnection);
+  Result := TQueryExecutor.Execute(Query, FConnection);
 end; 
 
 {**
@@ -152,7 +152,7 @@ end;
  *}
 function ${type_name}.QuerySingleResult(var Query: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(Query, fConnection);
+  Result := TQueryExecutor.queryForString(Query, FConnection);
 end; 
 
 end.

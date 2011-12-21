@@ -15,7 +15,7 @@ type
    *}
   TDAOFactory = class
   private
-    class var fConnection: TConnection;
+    class var FConnection: TConnection;
   public
     class constructor Create;
     class destructor Destroy;
@@ -26,13 +26,13 @@ implementation
 
 class constructor TDAOFactory.Create;
 begin
-  fConnection := TConnection.Create;
+  FConnection := TConnection.Create;
 end;
 
 class destructor TDAOFactory.Destroy;
 begin
-  fConnection.Close;
-  fConnection.Free;
+  FConnection.Close;
+  FConnection.Free;
 end;
 
 ${implementation_code}
