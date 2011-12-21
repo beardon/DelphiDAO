@@ -17,14 +17,15 @@ type
     procedure SetConnection(value: TCustomMyConnection);
     procedure SetSQL(value: TStrings);
   public
-    property Connection: TCustomMyConnection read GetConnection write SetConnection;
-    property Dataset: TMyQuery read fQuery;
-    property SQL: TStrings read GetSQL write SetSQL;
     constructor Create;
+    procedure Close;
     function CopyFields(source: TDataSet): Integer;
     procedure Execute;
     function FieldByName(const FieldName: string): TField;
     function ParamByName(const Value: string): TDAParam;
+    property Connection: TCustomMyConnection read GetConnection write SetConnection;
+    property Dataset: TMyQuery read fQuery;
+    property SQL: TStrings read GetSQL write SetSQL;
   end;
 
 implementation
@@ -35,6 +36,11 @@ uses
 constructor TTBGQuery.Create;
 begin
   fQuery := TTBGQueryFactory.GetQuery;
+end;
+
+procedure TTBGQuery.Close;
+begin
+  fQuery.Close;
 end;
 
 function TTBGQuery.CopyFields(source: TDataSet): Integer;

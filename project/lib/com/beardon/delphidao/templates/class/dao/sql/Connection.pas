@@ -15,12 +15,12 @@ type
     fAffectedRows: Integer;
     fInsertId: Int64;
   public
-    property Connection: TMyConnection read fConnection;
-    property AffectedRows: Integer read fAffectedRows;
-    property InsertId: Int64 read fInsertId;
     constructor Create;
     procedure Close;
     function ExecuteQuery(var Query: TTBGQuery): TDataSet;
+    property Connection: TMyConnection read fConnection;
+    property AffectedRows: Integer read fAffectedRows;
+    property InsertId: Int64 read fInsertId;
   end;
 
 implementation

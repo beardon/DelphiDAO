@@ -122,7 +122,7 @@ begin
   code := code + TAB + 'qry: TTBGQuery;' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'qry := TTBGQuery.Create;' + CRLF;
-  code := code + TAB + 'qry.sql.Add(''DELETE FROM ' + TableName + ' WHERE ' + FieldName + ' = :' + fieldMemberName + ''');' + CRLF;
+  code := code + TAB + 'qry.SQL.Add(''DELETE FROM ' + TableName + ' WHERE ' + FieldName + ' = :' + fieldMemberName + ''');' + CRLF;
   code := code + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := Value;' + CRLF;
   code := code + TAB + 'Result := ExecuteUpdate(qry);' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
@@ -173,10 +173,10 @@ begin
   code := code + TAB + 'qry: TTBGQuery;' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'qry := TTBGQuery.Create;' + CRLF;
-  code := code + TAB + 'qry.sql.Add(''SELECT * FROM ' + TableName + ''');' + CRLF;
-  code := code + TAB + 'qry.sql.Add(''WHERE ' + FieldName + ' '' + TSQLComparisonOperator.INDEX_OPERATOR_MAP[ComparisonOperator] + '' :' + fieldMemberName + ''');' + CRLF;
+  code := code + TAB + 'qry.SQL.Add(''SELECT * FROM ' + TableName + ''');' + CRLF;
+  code := code + TAB + 'qry.SQL.Add(''WHERE ' + FieldName + ' '' + TSQLComparisonOperator.INDEX_OPERATOR_MAP[ComparisonOperator] + '' :' + fieldMemberName + ''');' + CRLF;
   code := code + TAB + 'if (OrderClause <> '''') then' + CRLF;
-  code := code + TAB2 + 'qry.sql.Add(''ORDER BY '' + OrderClause);' + CRLF;
+  code := code + TAB2 + 'qry.SQL.Add(''ORDER BY '' + OrderClause);' + CRLF;
   params := TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := Value;' + CRLF;
   if (DelphiType = 'string') then
   begin
@@ -749,7 +749,7 @@ begin
       implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
       implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.sql.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.SQL.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
       for paramRec in paramRecs do
       begin
         implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
@@ -808,7 +808,7 @@ begin
       implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
       implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.sql.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.SQL.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
       for paramRec in paramRecs do
       begin
         implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
