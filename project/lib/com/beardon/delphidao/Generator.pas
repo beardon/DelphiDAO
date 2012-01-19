@@ -219,8 +219,8 @@ end;
 
 class procedure TGenerator.GenerateDTOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
 var
-  tableName, tableClassName,
-  typeName, pointerTypeName, privateVars, publicConstants, publicProperties,
+  tableName, tableClassName, typeName, typeParamName,
+  pointerTypeName, privateVars, publicConstants, publicProperties, assignAssignments,
   fieldName, fieldMemberName, thisType: string;
   template: TTemplate;
   ds: TClientDataSet;
@@ -240,13 +240,16 @@ begin
       template.SetPair('unit_name', tableClassName);
       template.SetPair('table_name', tableName);
       typeName := 'T' + tableClassName;
+      typeParamName := 'a' + tableClassName;
       pointerTypeName := 'P' + tableClassName;
       template.SetPair('type_name', typeName);
+      template.SetPair('type_param_name', typeParamName);
       template.SetPair('pointer_type_name', pointerTypeName);
       publicConstants := TAB2 + 'const TABLE_NAME = ''' + tableName + ''';';
       template.SetPair('public_constants', publicConstants);
       privateVars := '';
       publicProperties := '';
+      assignAssignments := '';
       ds := GetFields(tableName);
       with (ds) do
       while (not Eof) do
@@ -256,13 +259,16 @@ begin
         thisType := TDelphinator.MySQLTypeToDelphiType(FieldByName('Type').AsString);
         privateVars := privateVars + TAB2 + 'F' + fieldMemberName + ': ' + thisType + ';' + CRLF;
         publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + thisType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
+        assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + typeParamName + ').' + fieldMemberName + ';' + CRLF;
         Next;
       end;
       ds.Free;
       privateVars := LeftStr(privateVars, Length(privateVars) - 2);
       publicProperties := LeftStr(publicProperties, Length(publicProperties) - 2);
+      assignAssignments := LeftStr(assignAssignments, Length(assignAssignments) - 2);
       template.SetPair('private_vars', privateVars);
       template.SetPair('public_properties', publicProperties);
+      template.SetPair('assign_assignments', assignAssignments);
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
       template.Write('' + OutputPath + '\class\dto\' + tableClassName + '.pas');
       template.Free;
