@@ -36,13 +36,9 @@ var
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-  begin
-    connection := TConnection.Create;
-  end
+    connection := TConnection.Create
   else
-  begin
     connection := transaction.GetConnection;
-  end;
   Result := Execute(Query, connection);
   if (transaction = nil) then
   begin
@@ -60,7 +56,8 @@ begin
   dsp := TDataSetProvider.Create(dataset);
   dsp.DataSet := Connection.ExecuteQuery(Query);
   dataset.SetProvider(dsp);
-  dataset.Open;
+  if (dsp.DataSet.RecordCount > 0) then
+    dataset.Open;
   Result := dataset;
 end;
 
@@ -71,13 +68,9 @@ var
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-  begin
-    connection := TConnection.Create;
-  end
+    connection := TConnection.Create
   else
-  begin
     connection := transaction.GetConnection;
-  end;
   Result := ExecuteUpdate(Query, connection);
   if (transaction = nil) then
   begin
@@ -102,13 +95,9 @@ var
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-  begin
-    connection := TConnection.Create;
-  end
+    connection := TConnection.Create
   else
-  begin
     connection := transaction.GetConnection;
-  end;
   Result := ExecuteInsert(Query, connection);
   if (transaction = nil) then
   begin
@@ -133,13 +122,9 @@ var
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-  begin
-    connection := TConnection.Create;
-  end
+    connection := TConnection.Create
   else
-  begin
     connection := transaction.GetConnection;
-  end;
   Result := QueryForString(Query, connection);
   if (transaction = nil) then
   begin
@@ -164,13 +149,9 @@ var
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-  begin
-    connection := TConnection.Create;
-  end
+    connection := TConnection.Create
   else
-  begin
     connection := transaction.GetConnection;
-  end;
   Result := QueryForString(Query, FieldName, connection);
   if (transaction = nil) then
   begin
