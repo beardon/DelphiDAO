@@ -16,7 +16,7 @@ type
   ${type_name} = class(${ancestor_type_name})
   protected
   public
-end;
+  end;
 
 implementation
 

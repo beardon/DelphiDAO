@@ -5,11 +5,11 @@ interface
 type
   TArrayList = class
   private
-    fTab: array of TObject;
-    fSize: Integer;
+    FTab: array of TObject;
+    FSize: Integer;
   protected
   public
-    property Size: Integer read fSize;
+    property Size: Integer read FSize;
     constructor Create;
     procedure Add(Value: TObject);
     function Get(Index: Integer): TObject;
@@ -22,31 +22,31 @@ implementation
 
 constructor TArrayList.Create;
 begin
-  fTab := nil;
-  fSize := 0;
+  FTab := nil;
+  FSize := 0;
 end;
 
 procedure TArrayList.Add(Value: TObject);
 begin
-  SetLength(fTab, Length(fTab) + 1);
-  fTab[High(fTab)] := Value;
-  Inc(fSize);
+  SetLength(FTab, Length(FTab) + 1);
+  FTab[High(FTab)] := Value;
+  Inc(FSize);
 end;
 
 function TArrayList.Get(Index: Integer): TObject;
 begin
-  Result := fTab[Index];
+  Result := FTab[Index];
 end;
 
 function TArrayList.GetLast: TObject;
 begin
-  if (fSize = 0) then
+  if (FSize = 0) then
   begin
     Result := nil;
   end
   else
   begin
-    Result := fTab[fSize - 1];
+    Result := FTab[FSize - 1];
   end;
 end;
 
@@ -57,8 +57,8 @@ end;
 
 function TArrayList.RemoveLast: Integer;
 begin
-  Dec(fSize);
-  Result := fSize;
+  Dec(FSize);
+  Result := FSize;
 end;
 
 end.

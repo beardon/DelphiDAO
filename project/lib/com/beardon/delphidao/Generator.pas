@@ -10,9 +10,10 @@ uses
 type
   TRoutineParameter = record
     Direction: string;
-    VarName: string;
     SQLType: string;
+    VarName: string;
   end;
+
   TGenerator = class
   private
     class procedure Init(OutputPath, TemplatePath: string);
@@ -221,7 +222,8 @@ class procedure TGenerator.GenerateDTOObjects(const Dataset: TClientDataSet; con
 var
   tableName, tableClassName, typeName, typeParamName,
   pointerTypeName, privateVars, publicConstants, publicProperties, assignAssignments,
-  fieldName, fieldMemberName, thisType: string;
+  fieldName, fieldMemberName, sqlType, delphiType: string;
+  isNullable: Boolean;
   template: TTemplate;
   ds: TClientDataSet;
 begin
@@ -240,7 +242,7 @@ begin
       template.SetPair('unit_name', tableClassName);
       template.SetPair('table_name', tableName);
       typeName := 'T' + tableClassName;
-      typeParamName := 'a' + tableClassName;
+      typeParamName := 'A' + tableClassName;
       pointerTypeName := 'P' + tableClassName;
       template.SetPair('type_name', typeName);
       template.SetPair('type_param_name', typeParamName);
@@ -256,9 +258,11 @@ begin
       begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
-        thisType := TDelphinator.MySQLTypeToDelphiType(FieldByName('Type').AsString);
-        privateVars := privateVars + TAB2 + 'F' + fieldMemberName + ': ' + thisType + ';' + CRLF;
-        publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + thisType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
+        isNullable := (FieldByName('Null').AsString = 'YES');
+        sqlType := FieldByName('Type').AsString;
+        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
+        privateVars := privateVars + TAB2 + 'F' + fieldMemberName + ': ' + delphiType + '; //' + sqlType + CRLF;
+        publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + delphiType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
         assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + typeParamName + ').' + fieldMemberName + ';' + CRLF;
         Next;
       end;
@@ -347,7 +351,7 @@ begin
       functionDeclarations := functionDeclarations + TAB2 + 'class function Get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
       implementationCode := implementationCode + 'class function TDAOFactory.Get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'Result := T' + tableClassName + 'MySQLExtDAO.Create(fConnection);' + CRLF;
+      implementationCode := implementationCode + TAB + 'Result := T' + tableClassName + 'MySQLExtDAO.Create(FConnection);' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
       Next;
@@ -384,6 +388,7 @@ var
   ds: TClientDataSet;
   hasPK: Boolean;
   indices: TStringList;
+  isNullable: Boolean;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -419,9 +424,10 @@ begin
       begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
+        isNullable := (FieldByName('Null').AsString = 'YES');
         sqlType := FieldByName('Type').AsString;
-        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType);
-        asType := TDelphinator.MySQLTypeToDelphiAsType(sqlType);
+        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
+        asType := TDelphinator.MySQLTypeToDelphiAsType(sqlType, isNullable);
         if (FieldByName('Key').AsString = 'PRI') then
         begin
           pk := fieldName;
@@ -581,6 +587,8 @@ var
   template: TTemplate;
   ds: TClientDataSet;
   hasPK: Boolean;
+  guid: TGUID;
+  isNullable: Boolean;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -604,9 +612,10 @@ begin
       begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
+        isNullable := (FieldByName('Null').AsString = 'YES');
         sqlType := FieldByName('Type').AsString;
-        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType);
-        asType := TDelphinator.MySQLTypeToDelphiAsType(sqlType);
+        delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
+        asType := TDelphinator.MySQLTypeToDelphiAsType(sqlType, isNullable);
         if (FieldByName('Key').AsString = 'PRI') then
         begin
           pk := fieldName;
@@ -672,12 +681,14 @@ begin
         deleteByDef := LeftStr(deleteByDef, Length(deleteByDef) - 2);
         template.SetPair('delete_by_definitions', deleteByDef);
       end;
+      CreateGuid(guid);
       usesList := TAB + tableClassName + ',';
       typeName := 'I' + tableClassName + 'DAO';
       template.SetPair('unit_name', tableClassName);
       template.SetPair('uses_list', usesList);
       template.SetPair('type_name', typeName);
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
+      template.SetPair('guid', GUIDToString(guid));
       queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
       template.SetPair('query_by_definitions', queryByDef);
       template.Write('' + OutputPath + '\class\dao\' + tableClassName + 'DAO.pas');
@@ -732,7 +743,7 @@ begin
       sqlParams := '';
       for paramRec in paramRecs do
       begin
-        funcParams := funcParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType) + '; ';
+        funcParams := funcParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + '; ';
         sqlParams := sqlParams + ':' + paramRec.VarName + ', ';
       end;
       if (funcParams <> '') then
@@ -747,7 +758,7 @@ begin
         implementationCode := implementationCode + ' * ' + comment + CRLF;
         implementationCode := implementationCode + ' *' + CRLF;
       end;
-      implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
+      implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
       implementationCode := implementationCode + '*}' + CRLF;
       implementationCode := implementationCode + 'class procedure TStoredRoutines.' + delphiRoutineName + '(' + funcParams + ');' + CRLF;
       implementationCode := implementationCode + 'var' + CRLF;
@@ -762,6 +773,7 @@ begin
       end;
       implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.Execute(qry);' + CRLF;
       implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
       paramRecs.Free;
@@ -788,7 +800,7 @@ begin
       sqlParams := '';
       for paramRec in paramRecs do
       begin
-        funcParams := funcParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType) + '; ';
+        funcParams := funcParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + '; ';
         sqlParams := sqlParams + ':' + paramRec.VarName + ', ';
       end;
       if (funcParams <> '') then
@@ -797,7 +809,7 @@ begin
         sqlParams := Copy(sqlParams, 1, Length(sqlParams) - 2);
       end;
       sqlReturnType := GetRoutineReturnType(createSQL);
-      delphiReturnType := TDelphinator.MySQLTypeToDelphiType(sqlReturnType);
+      delphiReturnType := TDelphinator.MySQLTypeToDelphiType(sqlReturnType, False);
       functionDeclarations := functionDeclarations + TAB2 + 'class function ' + delphiRoutineName + '(' + funcParams + '): ' + delphiReturnType + ';' + CRLF;
       implementationCode := implementationCode + '{**' + CRLF;
       if (comment <> '') then
@@ -805,7 +817,7 @@ begin
         implementationCode := implementationCode + ' * ' + comment + CRLF;
         implementationCode := implementationCode + ' *' + CRLF;
       end;
-      implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
+      implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
       implementationCode := implementationCode + ' * @return ' + delphiReturnType + CRLF;
       implementationCode := implementationCode + '*}' + CRLF;
       implementationCode := implementationCode + 'class function TStoredRoutines.' + delphiRoutineName + '(' + funcParams + '): ' + delphiReturnType + ';' + CRLF;
@@ -822,6 +834,7 @@ begin
       implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.Execute(qry);' + CRLF;
       implementationCode := implementationCode + TAB + 'Result := ds.FieldByName(''value'').Value;' + CRLF;
       implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
       paramRecs.Free;

@@ -45,7 +45,7 @@ ${index_constants}
     function Clean: Integer;
 ${query_by_definitions}
 ${delete_by_definitions}
-end;
+  end;
 
 implementation
 

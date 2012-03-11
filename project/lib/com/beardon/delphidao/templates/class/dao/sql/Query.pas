@@ -11,7 +11,7 @@ uses
 type
   TTBGQuery = class
   private
-    fQuery: TMyQuery;
+    FQuery: TMyQuery;
     function GetConnection: TCustomMyConnection;
     function GetSQL: TStrings;
     procedure SetConnection(value: TCustomMyConnection);
@@ -24,7 +24,7 @@ type
     function FieldByName(const FieldName: string): TField;
     function ParamByName(const Value: string): TDAParam;
     property Connection: TCustomMyConnection read GetConnection write SetConnection;
-    property Dataset: TMyQuery read fQuery;
+    property Dataset: TMyQuery read FQuery;
     property SQL: TStrings read GetSQL write SetSQL;
   end;
 
@@ -35,52 +35,52 @@ uses
 
 constructor TTBGQuery.Create;
 begin
-  fQuery := TTBGQueryFactory.GetQuery;
+  FQuery := TTBGQueryFactory.GetQuery;
 end;
 
 procedure TTBGQuery.Close;
 begin
-  fQuery.Close;
+  FQuery.Close;
 end;
 
 function TTBGQuery.CopyFields(source: TDataSet): Integer;
 begin
-  Result := fQuery.CopyFields(source);
+  Result := FQuery.CopyFields(source);
 end;
 
 procedure TTBGQuery.Execute;
 begin
-  fQuery.Execute;
+  FQuery.Execute;
 end;
 
 function TTBGQuery.FieldByName(const FieldName: string): TField;
 begin
-  Result := fQuery.FieldByName(FieldName);
+  Result := FQuery.FieldByName(FieldName);
 end;
 
 function TTBGQuery.GetConnection: TCustomMyConnection;
 begin
-  Result := fQuery.Connection;
+  Result := FQuery.Connection;
 end;
 
 function TTBGQuery.GetSQL: TStrings;
 begin
-  Result := fQuery.SQL;
+  Result := FQuery.SQL;
 end;
 
 function TTBGQuery.ParamByName(const Value: string): TDAParam;
 begin
-  Result := fQuery.ParamByName(Value);
+  Result := FQuery.ParamByName(Value);
 end;
 
 procedure TTBGQuery.SetConnection(value: TCustomMyConnection);
 begin
-  fQuery.Connection := value;
+  FQuery.Connection := value;
 end;
 
 procedure TTBGQuery.SetSQL(value: TStrings);
 begin
-  fQuery.SQL := value;
+  FQuery.SQL := value;
 end;
 
 end.

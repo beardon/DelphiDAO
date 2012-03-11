@@ -14,12 +14,12 @@ type
    * @author: Aaron Bean
    * @date: ${date}
    *}
-  ${type_name} = Interface(IInterface)
+  ${type_name} = interface['${guid}']
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 ${query_by_definitions}
-end;
+  end;
 
 implementation
 

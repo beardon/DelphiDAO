@@ -5,8 +5,8 @@ interface
 type
   TTemplate = class
   private
-    fTemplate: string;
-    fContent: string;
+    FTemplate: string;
+    FContent: string;
     function GetContent: string;
   public
     constructor Create(const TemplateFilename: string);
@@ -24,8 +24,8 @@ const
 
 constructor TTemplate.Create(const TemplateFilename: string);
 begin
-  fTemplate := TemplateFilename;
-  fContent := GetContent;
+  FTemplate := TemplateFilename;
+  FContent := GetContent;
 end;
 
 procedure TTemplate.SetPair(const Key, Value: string);
@@ -33,7 +33,7 @@ var
   tag: string;
 begin
   tag := '${' + Key + '}';
-  fContent := StringReplace(fContent, tag, Value, [rfReplaceAll]);
+  FContent := StringReplace(FContent, tag, Value, [rfReplaceAll]);
 end;
 
 function TTemplate.GetContent: string;
@@ -41,7 +41,7 @@ var
   buffer, txt: string;
   handle: TextFile;
 begin
-  AssignFile(handle, fTemplate);
+  AssignFile(handle, FTemplate);
   Reset(handle);
   while not Eof(handle) do
   begin
@@ -58,7 +58,7 @@ var
 begin
   AssignFile(handle, Filename);
   ReWrite(handle);
-  WriteLn(handle, fContent);
+  WriteLn(handle, FContent);
   CloseFile(handle);
 end;
 

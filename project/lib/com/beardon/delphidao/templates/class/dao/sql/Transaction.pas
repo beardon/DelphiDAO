@@ -9,8 +9,8 @@ uses
 type
   TTransaction = class
   private
-    class var fConnection: TConnection;
-    fTransactions: TArrayList;
+    class var FConnection: TConnection;
+    FTransactions: TArrayList;
   public
     constructor Create;
     procedure Commit;
@@ -28,15 +28,15 @@ constructor TTransaction.Create;
 var
   qry: TTBGQuery;
 begin
-  fConnection := TConnection.Create;
-  if (TTransaction.fTransactions = nil) then
+  FConnection := TConnection.Create;
+  if (TTransaction.FTransactions = nil) then
   begin
-    TTransaction.fTransactions := TArrayList.Create;
+    TTransaction.FTransactions := TArrayList.Create;
   end;
-  TTransaction.fTransactions.Add(Self);
+  TTransaction.FTransactions.Add(Self);
   qry := TTBGQuery.Create;
   qry.SQL.Add('BEGIN');
-  fConnection.ExecuteQuery(qry);
+  FConnection.ExecuteQuery(qry);
   qry.Free;
 end;
 
@@ -46,10 +46,10 @@ var
 begin
   qry := TTBGQuery.Create;
   qry.SQL.Add('COMMIT');
-  fConnection.ExecuteQuery(qry);
+  FConnection.ExecuteQuery(qry);
   qry.Free;
-  fConnection.Close;
-  TTransaction.fTransactions.RemoveLast;
+  FConnection.Close;
+  TTransaction.FTransactions.RemoveLast;
 end;
 
 procedure TTransaction.Rollback;
@@ -58,22 +58,22 @@ var
 begin
   qry := TTBGQuery.Create;
   qry.SQL.Add('ROLLBACK');
-  fConnection.ExecuteQuery(qry);
+  FConnection.ExecuteQuery(qry);
   qry.Free;
-  fConnection.Close;
-  TTransaction.fTransactions.RemoveLast;
+  FConnection.Close;
+  TTransaction.FTransactions.RemoveLast;
 end;
 
 function TTransaction.GetConnection: TConnection;
 begin
-  Result := fConnection;
+  Result := FConnection;
 end;
 
 class function TTransaction.GetCurrentTransaction: TTransaction;
 begin
-  if (TTransaction.fTransactions <> nil) then
+  if (TTransaction.FTransactions <> nil) then
   begin
-    Result := TTransaction(TTransaction.fTransactions.GetLast);
+    Result := TTransaction(TTransaction.FTransactions.GetLast);
   end
   else
   begin

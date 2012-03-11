@@ -38,7 +38,7 @@ ${index_constants}
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 ${query_by_definitions}
-end;
+  end;
 
 implementation
 

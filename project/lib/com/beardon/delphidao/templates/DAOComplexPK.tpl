@@ -37,7 +37,7 @@ type
     function Update(var ${var_name}: ${dao_class_name}): Integer;
     function Clean: Integer;
 ${public_functions}
-end;
+  end;
 
 implementation
 

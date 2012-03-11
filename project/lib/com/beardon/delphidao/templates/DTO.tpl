@@ -21,7 +21,7 @@ ${private_vars}
 ${public_constants}
     procedure Assign(${type_param_name}: TPersistent); override;
 ${public_properties}
-end;
+  end;
 
 implementation
 
