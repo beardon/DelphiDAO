@@ -226,6 +226,8 @@ var
   isNullable: Boolean;
   template: TTemplate;
   ds: TClientDataSet;
+  fieldMemberNames: TStringList;
+  i: Integer;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -253,11 +255,19 @@ begin
       publicProperties := '';
       assignAssignments := '';
       ds := GetFields(tableName);
+      fieldMemberNames := TStringList.Create;
       with (ds) do
       while (not Eof) do
       begin
         fieldName := FieldByName('Field').AsString;
+        i := 1;
         fieldMemberName := TInflector.Memberify(fieldName);
+        while (fieldMemberNames.IndexOf(fieldMemberName) > -1) do
+        begin
+          Inc(i);
+          fieldMemberName := TInflector.Memberify(fieldName) + IntToStr(i);
+        end;
+        fieldMemberNames.Add(fieldMemberName);
         isNullable := (FieldByName('Null').AsString = 'YES');
         sqlType := FieldByName('Type').AsString;
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
@@ -266,6 +276,7 @@ begin
         assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + typeParamName + ').' + fieldMemberName + ';' + CRLF;
         Next;
       end;
+      fieldMemberNames.Free;
       ds.Free;
       privateVars := LeftStr(privateVars, Length(privateVars) - 2);
       publicProperties := LeftStr(publicProperties, Length(publicProperties) - 2);
@@ -389,6 +400,7 @@ var
   hasPK: Boolean;
   indices: TStringList;
   isNullable: Boolean;
+  fieldMemberNames: TStringList;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -419,11 +431,19 @@ begin
       queryByFunc := '';
       deleteByDef := '';
       deleteByFunc := '';
+      fieldMemberNames := TStringList.Create;
       with (ds) do
       while (not Eof) do
       begin
         fieldName := FieldByName('Field').AsString;
+        i := 1;
         fieldMemberName := TInflector.Memberify(fieldName);
+        while (fieldMemberNames.IndexOf(fieldMemberName) > -1) do
+        begin
+          Inc(i);
+          fieldMemberName := TInflector.Memberify(fieldName) + IntToStr(i);
+        end;
+        fieldMemberNames.Add(fieldMemberName);
         isNullable := (FieldByName('Null').AsString = 'YES');
         sqlType := FieldByName('Type').AsString;
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
@@ -451,30 +471,23 @@ begin
         readRow := readRow + TAB + tableClassName + '.' + fieldMemberName + ' := dataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
       end;
+      fieldMemberNames.Free;
       ds.Free;
       if (hasPK) then
       begin
         if (Length(pks) = 1) then
-        begin
-          template := TTemplate.Create(TemplatePath + '\DAO.tpl');
-        end
+          template := TTemplate.Create(TemplatePath + '\DAO.tpl')
         else
-        begin
           template := TTemplate.Create(TemplatePath + '\DAOComplexPK.tpl');
-        end;
       end
       else
-      begin
         template := TTemplate.Create(TemplatePath + '\DAOView.tpl');
-      end;
       indexConstants := '';
       if (indices.Count > 0) then
       begin
         mappingArray := 'array[0..' + IntToStr(indices.Count - 1) + '] of string = (''' + StringReplace(indices.DelimitedText, ',', ''',''', [rfReplaceAll]) + ''')';
         for i := 0 to indices.Count - 1 do
-        begin
           indexConstants := indexConstants + TAB2 + 'const INDEX_' + UpperCase(indices[i]) + ' = ' + IntToStr(i) + ';' + CRLF;
-        end;
       end
       else
       begin
@@ -521,17 +534,11 @@ begin
           s4 := s4 + CRLF;
         end;
         if (s[1] = ',') then
-        begin
           s := Copy(s, 2, MaxInt);
-        end;
         if (insertValues2[1] = ',') then
-        begin
           insertValues2 := Copy(insertValues2, 2, MaxInt);
-        end;
         if (insertFields2[1] = ',') then
-        begin
           insertFields2 := Copy(insertFields2, 2, MaxInt);
-        end;
         insertFields := LeftStr(insertFields, Length(insertFields) - 1);
         insertFields := TDelphinator.ConcatLongString(insertFields, True);
         updateFields := LeftStr(updateFields, Length(updateFields) - 1);
@@ -589,6 +596,7 @@ var
   hasPK: Boolean;
   guid: TGUID;
   isNullable: Boolean;
+  fieldMemberNames: TStringList;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -607,11 +615,19 @@ begin
       SetLength(pks, 0);
       queryByDef := '';
       deleteByDef := '';
+      fieldMemberNames := TStringList.Create;
       with (ds) do
       while (not Eof) do
       begin
         fieldName := FieldByName('Field').AsString;
+        i := 1;
         fieldMemberName := TInflector.Memberify(fieldName);
+        while (fieldMemberNames.IndexOf(fieldMemberName) > -1) do
+        begin
+          Inc(i);
+          fieldMemberName := TInflector.Memberify(fieldName) + IntToStr(i);
+        end;
+        fieldMemberNames.Add(fieldMemberName);
         isNullable := (FieldByName('Null').AsString = 'YES');
         sqlType := FieldByName('Type').AsString;
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
@@ -625,29 +641,22 @@ begin
         else
         begin
           if (sqlType <> 'timestamp') then
-          begin
             deleteByDef := deleteByDef + TAB2 + 'function DeleteBy' + fieldMemberName + '(const Value: ' + delphiType + '): Integer;' + CRLF;
-          end;
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldName, delphiType, False);
         end;
         Next;
       end;
+      fieldMemberNames.Free;
       ds.Free;
       if (hasPK) then
       begin
         if (Length(pks) = 1) then
-        begin
-          template := TTemplate.Create(TemplatePath + '\IDAO.tpl');
-        end
+          template := TTemplate.Create(TemplatePath + '\IDAO.tpl')
         else
-        begin
           template := TTemplate.Create(TemplatePath + '\IDAOComplexPK.tpl');
-        end;
       end
       else
-      begin
         template := TTemplate.Create(TemplatePath + '\IDAOView.tpl');
-      end;
       template.SetPair('dao_class_name', 'T' + tableClassName);
       template.SetPair('table_name', tableName);
       template.SetPair('var_name', tableClassName);
@@ -828,9 +837,7 @@ begin
       implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.SQL.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
       for paramRec in paramRecs do
-      begin
         implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
-      end;
       implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.Execute(qry);' + CRLF;
       implementationCode := implementationCode + TAB + 'Result := ds.FieldByName(''value'').Value;' + CRLF;
       implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
@@ -877,9 +884,7 @@ begin
   while (not Eof) do
   begin
     if (ds.FieldByName('Key').AsString <> '') then
-    begin
       indices.Add(ds.FieldByName('Field').AsString);
-    end;
     Next;
   end;
   Result := indices;
