@@ -181,7 +181,7 @@ var
   ${var_name}: ${dao_class_name};
 begin
   ${var_name} := ${dao_class_name}.Create;
-  if (AClientDataset.RecordCount > 0) then
+  if (not AClientDataset.IsEmpty) then
   begin
 ${read_row}
   end;

@@ -104,7 +104,10 @@ var
   ${var_name}: ${dao_class_name};
 begin
   ${var_name} := ${dao_class_name}.Create;
+  if (not AClientDataset.IsEmpty) then
+  begin
 ${read_row}
+  end;
   Result := ${var_name};
 end;
 	

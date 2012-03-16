@@ -466,7 +466,7 @@ begin
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldMemberName, delphiType, True, firstIndex);
           queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, fieldMemberName, delphiType, firstIndex);
         end;
-        readRow := readRow + TAB + tableClassName + '.' + fieldMemberName + ' := AClientDataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
+        readRow := readRow + TAB2 + tableClassName + '.' + fieldMemberName + ' := AClientDataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
       end;
       fieldMemberNames.Free;
