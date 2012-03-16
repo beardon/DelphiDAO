@@ -22,11 +22,11 @@ type
     class function CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
     class function CreateQueryByFunctions(const TableName, FieldName, FieldMemberName, DelphiType, PrimaryKeyIndex: string): string;
     class function DoesTableContainPK(const TableName: string): Boolean;
-    class procedure GenerateDTOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDAOExtObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDAOFactory(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateIDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDTOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDAOExtObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDAOFactory(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+    class procedure GenerateIDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
     class procedure GenerateStoredRoutines(const OutputPath, TemplatePath: string);
     class function GetFields(const TableName: string): TClientDataSet;
     class function GetIndices(const TableName: string): TStringList;
@@ -216,7 +216,7 @@ begin
   Result := success;
 end;
 
-class procedure TGenerator.GenerateDTOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+class procedure TGenerator.GenerateDTOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName, typeName, typeParamName,
   pointerTypeName, privateVars, publicConstants, publicProperties, assignAssignments,
@@ -230,7 +230,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (Dataset) do
+  with (AClientDataSet) do
   begin
     First;
     while (not Eof) do
@@ -294,7 +294,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDAOExtObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+class procedure TGenerator.GenerateDAOExtObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName,
   typeName, ancestorTypeName, usesList: string;
@@ -303,7 +303,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (Dataset) do
+  with (AClientDataSet) do
   begin
     First;
     while (not Eof) do
@@ -339,7 +339,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDAOFactory(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+class procedure TGenerator.GenerateDAOFactory(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName,
   usesList, functionDeclarations, implementationCode: string;
@@ -349,7 +349,7 @@ begin
   AllocConsole;
 {$ENDIF}
   Write('Generating ' + '"' + OutputPath + '\class\dao\DAOFactory.pas"...');
-  with (Dataset) do
+  with (AClientDataSet) do
   begin
     First;
     while (not Eof) do
@@ -382,7 +382,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+class procedure TGenerator.GenerateDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   i: Integer;
   tableName, tableClassName, usesList, interfaceName, firstIndex,
@@ -403,7 +403,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (Dataset) do
+  with (AClientDataSet) do
   begin
     First;
     while (not Eof) do
@@ -466,7 +466,7 @@ begin
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldMemberName, delphiType, True, firstIndex);
           queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, fieldMemberName, delphiType, firstIndex);
         end;
-        readRow := readRow + TAB + tableClassName + '.' + fieldMemberName + ' := dataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
+        readRow := readRow + TAB + tableClassName + '.' + fieldMemberName + ' := AClientDataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
       end;
       fieldMemberNames.Free;
@@ -581,7 +581,7 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateIDAOObjects(const Dataset: TClientDataSet; const OutputPath, TemplatePath: string);
+class procedure TGenerator.GenerateIDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   i: Integer;
   tableName, tableClassName, usesList,
@@ -599,7 +599,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (Dataset) do
+  with (AClientDataSet) do
   begin
     First;
     while (not Eof) do

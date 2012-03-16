@@ -26,7 +26,7 @@ type
     const INDEX_FIELD_MAP: ${mapping_array};
     var FConnection: TConnection;
   protected
-    function ReadRow(const ADataset: TClientDataSet): ${dao_class_name}; 
+    function ReadRow(const AClientDataset: TClientDataSet): ${dao_class_name}; 
     function GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
     function GetRow(var AQuery: TTBGQuery): ${dao_class_name};
     function Execute(var AQuery: TTBGQuery): TClientDataSet;
@@ -176,12 +176,12 @@ ${delete_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.ReadRow(const ADataset: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const AClientDataset: TClientDataSet): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
   ${var_name} := ${dao_class_name}.Create;
-  if (ADataset.RecordCount > 0) then
+  if (AClientDataset.RecordCount > 0) then
   begin
 ${read_row}
   end;
