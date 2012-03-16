@@ -26,11 +26,11 @@ type
     const INDEX_FIELD_MAP: ${mapping_array};
     var FConnection: TConnection;
   protected
-    function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
-    function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
-    function GetRow(var Query: TTBGQuery): ${dao_class_name};
-    function Execute(var Query: TTBGQuery): TClientDataSet;
-    function QuerySingleResult(var Query: TTBGQuery): string;
+    function ReadRow(const AClientDataSet: TClientDataSet): ${dao_class_name}; 
+    function GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
+    function GetRow(var AQuery: TTBGQuery): ${dao_class_name};
+    function Execute(var AQuery: TTBGQuery): TClientDataSet;
+    function QuerySingleResult(var AQuery: TTBGQuery): string;
   public
 ${index_constants}
     constructor Create(aConnection: TConnection);
@@ -99,7 +99,7 @@ ${query_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.ReadRow(const Dataset: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const AClientDataSet: TClientDataSet): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
@@ -108,21 +108,21 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
 var
-  dataset: TClientDataSet;
+  aClientDataSet: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.Execute(Query, FConnection);
+  aClientDataSet := TQueryExecutor.Execute(AQuery, FConnection);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
-  while (not dataset.Eof) do
+  while (not aClientDataSet.Eof) do
   begin
-    ${var_name}s.Add(ReadRow(dataset));
-    dataset.Next;
+    ${var_name}s.Add(ReadRow(aClientDataSet));
+    aClientDataSet.Next;
   end;
   Result := ${var_name}s;  
-  dataset.Free;
+  aClientDataSet.Free;
 end;
 	
 {**
@@ -130,29 +130,29 @@ end;
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.GetRow(var Query: TTBGQuery): ${dao_class_name};
+function ${type_name}.GetRow(var AQuery: TTBGQuery): ${dao_class_name};
 var
-  dataset: TClientDataSet;
+  aClientDataSet: TClientDataSet;
 begin
-  dataset := TQueryExecutor.Execute(Query, FConnection);
-  Result := ReadRow(dataset);
-  dataset.Free;
+  aClientDataSet := TQueryExecutor.Execute(AQuery, FConnection);
+  Result := ReadRow(aClientDataSet);
+  aClientDataSet.Free;
 end; 
 	
 {**
  * Execute sql query
  *}
-function ${type_name}.Execute(var Query: TTBGQuery): TClientDataSet;
+function ${type_name}.Execute(var AQuery: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.Execute(Query, FConnection);
+  Result := TQueryExecutor.Execute(AQuery, FConnection);
 end; 
 
 {**
  * Query for one row and one column
  *}
-function ${type_name}.QuerySingleResult(var Query: TTBGQuery): string;
+function ${type_name}.QuerySingleResult(var AQuery: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(Query, FConnection);
+  Result := TQueryExecutor.queryForString(AQuery, FConnection);
 end; 
 
 end.

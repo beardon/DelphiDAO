@@ -190,19 +190,19 @@ end;
 	
 function ${type_name}.GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
 var
-  aDataset: TClientDataSet;
+  aClientDataSet: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  aDataset := TQueryExecutor.Execute(AQuery, FConnection);
+  aClientDataSet := TQueryExecutor.Execute(AQuery, FConnection);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
-  while (not aDataset.Eof) do
+  while (not aClientDataSet.Eof) do
   begin
-    ${var_name}s.Add(ReadRow(aDataset));
-    aDataset.Next;
+    ${var_name}s.Add(ReadRow(aClientDataSet));
+    aClientDataSet.Next;
   end;
   Result := ${var_name}s;  
-  aDataset.Free;
+  aClientDataSet.Free;
 end;
 	
 {**
@@ -212,11 +212,11 @@ end;
  *}
 function ${type_name}.GetRow(var AQuery: TTBGQuery): ${dao_class_name};
 var
-  dataset: TClientDataSet;
+  aClientDataSet: TClientDataSet;
 begin
-  dataset := TQueryExecutor.Execute(AQuery);
-  Result := ReadRow(dataset);
-  dataset.Free;
+  aClientDataSet := TQueryExecutor.Execute(AQuery);
+  Result := ReadRow(aClientDataSet);
+  aClientDataSet.Free;
 end; 
 	
 {**
