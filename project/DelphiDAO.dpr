@@ -37,22 +37,14 @@ begin
   for i := 1 to ParamCount do
   begin
     if (LeftStr(ParamStr(i), 2) = OUTPUT_PATH_PARAM) then
-    begin
       OutputPath := Copy(ParamStr(i), 3, MaxInt);
-    end;
     if (LeftStr(ParamStr(i), 2) = TEMPLATE_PATH_PARAM) then
-    begin
       TemplatePath := Copy(ParamStr(i), 3, MaxInt);
-    end;
   end;
   if (OutputPath = '') then
-  begin
     OutputPath := ExtractFilePath(Application.ExeName);
-  end;
   if (TemplatePath = '') then
-  begin
     TemplatePath := DEFAULT_TEMPLATE_PATH;
-  end;
 end;
 
 begin
