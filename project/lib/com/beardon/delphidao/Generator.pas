@@ -734,6 +734,7 @@ begin
   ds := TQueryExecutor.Execute(qry);
   qry.Free;
   with (ds) do
+  if (not IsEmpty) then
   begin
     First;
     while (not Eof) do
@@ -792,6 +793,7 @@ begin
   ds := TQueryExecutor.Execute(qry);
   qry.Free;
   with (ds) do
+  if (not IsEmpty) then
   begin
     First;
     while (not Eof) do
