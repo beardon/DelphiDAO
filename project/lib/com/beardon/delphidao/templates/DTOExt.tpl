@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}MySQLExtDAO;
+unit ${unit_name}Ext;
 
 interface
 
@@ -7,8 +7,9 @@ uses
 ${uses_list}
 
 type
+  ${pointer_type_name} = ^${type_name};
   {**
-   * Class that operates on MySQL table '${table_name}'. This class will not be overwritten.
+   * Class that represents table '${table_name}'. This class will not be overwritten.
    *
    * @author: Aaron Bean
    * @date: ${date}

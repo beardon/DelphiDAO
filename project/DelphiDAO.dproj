@@ -67,6 +67,18 @@
 			<DCCReference Include="lib\com\beardon\active_support\Inflectors.pas"/>
 			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\SQLComparisonOperator.pas"/>
 			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\SQLOrderDirection.pas"/>
+			<None Include="lib\com\beardon\delphidao\templates\ConnectionProperty.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DAO.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DAOComplexPK.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DAOExt.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DAOFactory.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DAOView.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DTO.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\IDAO.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\IDAOComplexPK.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\IDAOView.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\StoredRoutines.tpl"/>
+			<None Include="lib\com\beardon\delphidao\templates\DTOExt.tpl"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

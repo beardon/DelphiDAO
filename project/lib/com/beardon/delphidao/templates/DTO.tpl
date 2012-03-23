@@ -9,7 +9,7 @@ uses
 type
   ${pointer_type_name} = ^${type_name};
   {**
-   * Object represents table '${table_name}'.
+   * Class that represents table '${table_name}'.
    *
    * @author: Aaron Bean
    * @date: ${date}
