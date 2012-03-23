@@ -558,7 +558,7 @@ end;
 class procedure TGenerator.GenerateDTOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
 var
   tableName, tableClassName, typeName, typeParamName,
-  pointerTypeName, privateVars, publicConstants, publicProperties, assignAssignments,
+  pointerTypeName, protectedVars, publicConstants, publicProperties, assignAssignments,
   fieldName, fieldMemberName, sqlType, delphiType: string;
   isNullable: Boolean;
   template: TTemplate;
@@ -588,7 +588,7 @@ begin
       template.SetPair('pointer_type_name', pointerTypeName);
       publicConstants := TAB2 + 'const TABLE_NAME = ''' + tableName + ''';';
       template.SetPair('public_constants', publicConstants);
-      privateVars := '';
+      protectedVars := '';
       publicProperties := '';
       assignAssignments := '';
       ds := GetFields(tableName);
@@ -608,17 +608,17 @@ begin
         isNullable := (FieldByName('Null').AsString = 'YES');
         sqlType := FieldByName('Type').AsString;
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
-        privateVars := privateVars + TAB2 + 'F' + fieldMemberName + ': ' + delphiType + '; //' + sqlType + CRLF;
+        protectedVars := protectedVars + TAB2 + 'F' + fieldMemberName + ': ' + delphiType + '; //' + sqlType + CRLF;
         publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + delphiType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
         assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + typeParamName + ').' + fieldMemberName + ';' + CRLF;
         Next;
       end;
       fieldMemberNames.Free;
       ds.Free;
-      privateVars := LeftStr(privateVars, Length(privateVars) - 2);
+      protectedVars := LeftStr(protectedVars, Length(protectedVars) - 2);
       publicProperties := LeftStr(publicProperties, Length(publicProperties) - 2);
       assignAssignments := LeftStr(assignAssignments, Length(assignAssignments) - 2);
-      template.SetPair('private_vars', privateVars);
+      template.SetPair('protected_vars', protectedVars);
       template.SetPair('public_properties', publicProperties);
       template.SetPair('assign_assignments', assignAssignments);
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));

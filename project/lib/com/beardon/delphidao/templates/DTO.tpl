@@ -15,8 +15,8 @@ type
    * @date: ${date}
    *}
   ${type_name} = class(TPersistent)
-  private
-${private_vars}
+  protected
+${protected_vars}
   public
 ${public_constants}
     procedure Assign(${type_param_name}: TPersistent); override;
