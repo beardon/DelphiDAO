@@ -17,6 +17,7 @@ type
   TGenerator = class
   private
     class procedure Init(OutputPath, TemplatePath: string);
+    class procedure CleanDirectory(Path: string);
     class function CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
     class function CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
     class function CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
@@ -80,13 +81,16 @@ class procedure TGenerator.Init(OutputPath, TemplatePath: string);
 begin
 	CreateDir(OutputPath);
 	CreateDir(OutputPath + '\class');
+	CreateDir(OutputPath + '\class\core');
+	CreateDir(OutputPath + '\class\dao');
 	CreateDir(OutputPath + '\class\dto');
 	CreateDir(OutputPath + '\class\dto\ext');
 	CreateDir(OutputPath + '\class\mysql');
 	CreateDir(OutputPath + '\class\mysql\ext');
 	CreateDir(OutputPath + '\class\sql');
-	CreateDir(OutputPath + '\class\dao');
-	CreateDir(OutputPath + '\class\core');
+	CleanDirectory(OutputPath + '\class\dao');
+  CleanDirectory(OutputPath + '\class\dto');
+	CleanDirectory(OutputPath + '\class\mysql');
   CopyFile(PChar(TemplatePath + '\class\dao\core\ArrayList.pas'), PChar(OutputPath + '\class\core\ArrayList.pas'), False);
   CopyFile(PChar(TemplatePath + '\class\dao\sql\Connection.pas'), PChar(OutputPath + '\class\sql\Connection.pas'), False);
   CopyFile(PChar(TemplatePath + '\class\dao\sql\ConnectionFactory.pas'), PChar(OutputPath + '\class\sql\ConnectionFactory.pas'), False);
@@ -99,6 +103,17 @@ begin
   CopyFile(PChar(TemplatePath + '\class\dao\sql\SQLComparisonOperator.pas'), PChar(OutputPath + '\class\sql\SQLComparisonOperator.pas'), False);
   CopyFile(PChar(TemplatePath + '\class\dao\sql\SQLOrderDirection.pas'), PChar(OutputPath + '\class\sql\SQLOrderDirection.pas'), False);
   CopyFile(PChar(TemplatePath + '\class\dao\sql\Transaction.pas'), PChar(OutputPath + '\class\sql\Transaction.pas'), False);
+end;
+
+class procedure TGenerator.CleanDirectory(Path: string);
+var
+  fileInfo: TSearchRec;
+begin
+  FindFirst(Path + '\*.pas', faAnyFile, fileInfo);
+  SysUtils.DeleteFile(Path + '\' + fileInfo.Name);
+  while (FindNext(fileInfo) = 0) do
+    SysUtils.DeleteFile(Path + '\' + fileInfo.Name);
+  SysUtils.FindClose(fileInfo);
 end;
 
 class function TGenerator.CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
