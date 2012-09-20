@@ -1,3 +1,4 @@
+{ $Id$ }
 unit ConnectionProperty;
 
 interface
@@ -5,11 +6,11 @@ interface
 type
   TConnectionProperty = class
   private
-    const HOST: string = 'localhost';
+    const HOST: string = '';
     const PORT: Integer = 3306;
-    const USER: string = 'username';
-    const PASSWORD: string = 'password';
-    const DATABASE: string = 'database';
+    const USER: string = 'developer';
+    const PASSWORD: string = '';
+    const DATABASE: string = 'schema';
   public
     class function GetHost: string; static;
     class function GetPort: Integer; static;
