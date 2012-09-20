@@ -11,7 +11,6 @@ type
   {**
    * DAOFactory
    * @author: Aaron Bean
-   * @date: ${date}
    *}
   TDAOFactory = class
   private

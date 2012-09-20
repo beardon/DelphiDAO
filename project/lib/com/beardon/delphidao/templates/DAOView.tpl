@@ -19,7 +19,6 @@ type
    * Class that operates on MySQL view '${table_name}'.
    *
    * @author: Aaron Bean
-   * @date: ${date}
    *}
   ${type_name} = class(TInterfacedObject, ${interface_name})
   private

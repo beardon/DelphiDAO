@@ -12,7 +12,6 @@ type
   {**
    * Stored Routines
    * @author: Aaron Bean
-   * @date: ${date}
    *}
   TStoredRoutines = class
   public

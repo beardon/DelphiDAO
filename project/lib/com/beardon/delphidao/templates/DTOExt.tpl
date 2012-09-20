@@ -12,7 +12,6 @@ type
    * Class that represents table '${table_name}'. This class will not be overwritten.
    *
    * @author: Aaron Bean
-   * @date: ${date}
    *}
   ${type_name} = class(${ancestor_type_name})
   protected

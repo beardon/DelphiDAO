@@ -12,7 +12,6 @@ type
    * Interface DAO
    *
    * @author: Aaron Bean
-   * @date: ${date}
    *}
   ${type_name} = interface['${guid}']
     function Load(const Id: Variant): ${dao_class_name};

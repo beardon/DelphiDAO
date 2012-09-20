@@ -12,7 +12,6 @@ type
    * Class that represents table '${table_name}'.
    *
    * @author: Aaron Bean
-   * @date: ${date}
    *}
   ${type_name} = class(TPersistent)
   protected
