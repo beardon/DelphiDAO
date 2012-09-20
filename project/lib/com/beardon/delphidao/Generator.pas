@@ -5,6 +5,7 @@ interface
 uses
   Classes,
   DBClient,
+  Hashes,
   Generics.Collections;
 
 type
@@ -42,6 +43,7 @@ implementation
 
 uses
   ConnectionProperty,
+  DB,
   Delphinator,
   Inflector,
   Query,
@@ -88,9 +90,9 @@ begin
 	CreateDir(OutputPath + '\class\mysql');
 	CreateDir(OutputPath + '\class\mysql\ext');
 	CreateDir(OutputPath + '\class\sql');
-	CleanDirectory(OutputPath + '\class\dao');
-  CleanDirectory(OutputPath + '\class\dto');
-	CleanDirectory(OutputPath + '\class\mysql');
+//	CleanDirectory(OutputPath + '\class\dao');
+//  CleanDirectory(OutputPath + '\class\dto');
+//	CleanDirectory(OutputPath + '\class\mysql');
   CopyFile(PChar(TemplatePath + '\class\dao\core\ArrayList.pas'), PChar(OutputPath + '\class\core\ArrayList.pas'), False);
   CopyFile(PChar(TemplatePath + '\class\dao\sql\Connection.pas'), PChar(OutputPath + '\class\sql\Connection.pas'), False);
   CopyFile(PChar(TemplatePath + '\class\dao\sql\ConnectionFactory.pas'), PChar(OutputPath + '\class\sql\ConnectionFactory.pas'), False);
@@ -297,7 +299,7 @@ begin
       begin
         Write('Generating ' + '"' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas"...');
         usesList := TAB + tableClassName + 'MySQLDAO;';
-        template := TTemplate.Create(TemplatePath + '\DAOExt.tpl');
+        template := TTemplate.Create(TemplatePath + '\DAOExt.tpl', NO_UPDATE_FILES);
         template.SetPair('unit_name', tableClassName);
         template.SetPair('uses_list', usesList);
         template.SetPair('table_name', tableName);
@@ -546,7 +548,7 @@ begin
       if (not FileExists('' + OutputPath + '\class\dto\ext\' + tableClassName + 'Ext.pas')) then
       begin
         Write('Generating ' + '"' + OutputPath + '\class\dto\ext\' + tableClassName + 'Ext.pas"...');
-        template := TTemplate.Create(TemplatePath + '\DTOExt.tpl');
+        template := TTemplate.Create(TemplatePath + '\DTOExt.tpl', NO_UPDATE_FILES);
         template.SetPair('unit_name', tableClassName);
         template.SetPair('uses_list', usesList);
         template.SetPair('table_name', tableName);
@@ -580,6 +582,7 @@ var
   ds: TClientDataSet;
   fieldMemberNames: TStringList;
   i: Integer;
+  s : TField;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
@@ -607,11 +610,15 @@ begin
       publicProperties := '';
       assignAssignments := '';
       ds := GetFields(tableName);
+
+
       fieldMemberNames := TStringList.Create;
-      with (ds) do
-      while (not Eof) do
+
+//      writeln(CalcHash2(ds.FieldDefs.ToString, haSHA1));
+
+      while (not ds.Eof) do
       begin
-        fieldName := FieldByName('Field').AsString;
+        fieldName := ds.FieldByName('Field').AsString;
         i := 1;
         fieldMemberName := TInflector.Memberify(fieldName);
         while (fieldMemberNames.IndexOf(fieldMemberName) > -1) do
@@ -620,13 +627,13 @@ begin
           fieldMemberName := TInflector.Memberify(fieldName) + IntToStr(i);
         end;
         fieldMemberNames.Add(fieldMemberName);
-        isNullable := (FieldByName('Null').AsString = 'YES');
-        sqlType := FieldByName('Type').AsString;
+        isNullable := (ds.FieldByName('Null').AsString = 'YES');
+        sqlType := ds.FieldByName('Type').AsString;
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
         protectedVars := protectedVars + TAB2 + 'F' + fieldMemberName + ': ' + delphiType + '; //' + sqlType + CRLF;
         publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + delphiType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
         assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + typeParamName + ').' + fieldMemberName + ';' + CRLF;
-        Next;
+        ds.Next;
       end;
       fieldMemberNames.Free;
       ds.Free;
@@ -764,7 +771,7 @@ begin
       template.SetPair('uses_list', usesList);
       template.SetPair('type_name', typeName);
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-      template.SetPair('guid', GUIDToString(guid));
+//      template.SetPair('guid', GUIDToString(guid));
       queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
       template.SetPair('query_by_definitions', queryByDef);
       template.Write('' + OutputPath + '\class\dao\' + tableClassName + 'DAO.pas');
