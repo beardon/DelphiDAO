@@ -13,7 +13,7 @@ type
    *
    * @author: Aaron Bean
    *}
-  ${type_name} = interface['${guid}']
+  ${type_name} = interface
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
