@@ -5,11 +5,11 @@ interface
 type
   TConnectionProperty = class
   private
-    const HOST: string = '192.168.1.107';
+    const HOST: string = 'localhost';
     const PORT: Integer = 3306;
     const USER: string = 'username';
-    const PASSWORD: string = 'sooper';
-    const DATABASE: string = 'schema';
+    const PASSWORD: string = 'password';
+    const DATABASE: string = 'database';
   public
     class function GetHost: string; static;
     class function GetPort: Integer; static;

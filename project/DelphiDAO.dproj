@@ -67,6 +67,7 @@
 			<DCCReference Include="lib\com\beardon\active_support\Inflectors.pas"/>
 			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\SQLComparisonOperator.pas"/>
 			<DCCReference Include="lib\com\beardon\delphidao\templates\class\dao\sql\SQLOrderDirection.pas"/>
+			<DCCReference Include="lib\com\beardon\utils\hashes.pas"/>
 			<None Include="lib\com\beardon\delphidao\templates\ConnectionProperty.tpl"/>
 			<None Include="lib\com\beardon\delphidao\templates\DAO.tpl"/>
 			<None Include="lib\com\beardon\delphidao\templates\DAOComplexPK.tpl"/>

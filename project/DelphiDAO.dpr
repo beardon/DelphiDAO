@@ -20,7 +20,8 @@ uses
   Delphinator in 'lib\com\beardon\active_support\Delphinator.pas',
   Inflectors in 'lib\com\beardon\active_support\Inflectors.pas',
   SQLComparisonOperator in 'lib\com\beardon\delphidao\templates\class\dao\sql\SQLComparisonOperator.pas',
-  SQLOrderDirection in 'lib\com\beardon\delphidao\templates\class\dao\sql\SQLOrderDirection.pas';
+  SQLOrderDirection in 'lib\com\beardon\delphidao\templates\class\dao\sql\SQLOrderDirection.pas',
+  hashes in 'lib\com\beardon\utils\hashes.pas';
 
 var
   OutputPath: string;
