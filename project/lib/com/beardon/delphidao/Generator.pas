@@ -90,6 +90,7 @@ begin
 	CreateDir(OutputPath + '\class\mysql');
 	CreateDir(OutputPath + '\class\mysql\ext');
 	CreateDir(OutputPath + '\class\sql');
+// need to compare files, so cannot blanket delete
 //	CleanDirectory(OutputPath + '\class\dao');
 //  CleanDirectory(OutputPath + '\class\dto');
 //	CleanDirectory(OutputPath + '\class\mysql');
@@ -540,7 +541,7 @@ begin
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName);
+      tableClassName := TInflector.Classify(tableName) + 'DTO';
       typeName := 'T' + tableClassName + 'Ext';
       ancestorTypeName := 'T' + tableClassName;
       pointerTypeName := 'P' + tableClassName + 'Ext';
@@ -593,7 +594,7 @@ begin
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName);
+      tableClassName := TInflector.Classify(tableName) + 'DTO';
       Write('Generating ' + '"' + OutputPath + '\class\dto\' + tableClassName + '.pas"...');
       template := TTemplate.Create(TemplatePath + '\DTO.tpl');
       template.SetPair('unit_name', tableClassName);
@@ -610,12 +611,7 @@ begin
       publicProperties := '';
       assignAssignments := '';
       ds := GetFields(tableName);
-
-
       fieldMemberNames := TStringList.Create;
-
-//      writeln(CalcHash2(ds.FieldDefs.ToString, haSHA1));
-
       while (not ds.Eof) do
       begin
         fieldName := ds.FieldByName('Field').AsString;
