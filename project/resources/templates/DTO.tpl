@@ -18,20 +18,20 @@ type
 ${protected_vars}
   public
 ${public_constants}
-    procedure Assign(${type_param_name}: TPersistent); override;
+    procedure Assign(${var_name}: TPersistent); override;
 ${public_properties}
   end;
 
 implementation
 
-procedure ${type_name}.Assign(${type_param_name}: TPersistent);
+procedure ${type_name}.Assign(${var_name}: TPersistent);
 begin
-  if (${type_param_name} is ${type_name}) then
+  if (${var_name} is ${type_name}) then
   begin
 ${assign_assignments}
   end
   else
-    inherited Assign(${type_param_name});
+    inherited Assign(${var_name});
 end;
 
 end.
