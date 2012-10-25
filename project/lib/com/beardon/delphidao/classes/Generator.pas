@@ -6,8 +6,8 @@ interface
 uses
   Classes,
   DBClient,
-  Hashes,
-  Generics.Collections;
+  Generics.Collections,
+  HashLib;
 
 type
   TRoutineParameter = record

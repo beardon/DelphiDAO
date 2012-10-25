@@ -23,9 +23,9 @@ type
 implementation
 
 uses
+  HashLib,
   SysUtils,
-  RegularExpressions,
-  Hashes;
+  RegularExpressions;
 
 const
   CRLF = #13#10;

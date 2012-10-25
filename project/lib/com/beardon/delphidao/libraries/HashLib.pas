@@ -1,4 +1,4 @@
-unit Hashes;
+unit HashLib;
 { Delphi doesn't have built in interface to Windows Crypto Routines }
 { Calling into the Windows Crypto API to generate SHA sums }
 { from http://delphi.jmrds.com/?q=node/36 }
