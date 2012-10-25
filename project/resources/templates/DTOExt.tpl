@@ -9,7 +9,8 @@ ${uses_list}
 type
   ${pointer_type_name} = ^${type_name};
   {**
-   * Class that represents table '${table_name}'. This class will not be overwritten.
+   * Class that represents database table '${table_name}'.
+   * This class will not be overwritten.
    *
    * @author: Aaron Bean
    *}

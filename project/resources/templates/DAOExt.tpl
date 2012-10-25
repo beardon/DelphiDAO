@@ -8,7 +8,8 @@ ${uses_list}
 
 type
   {**
-   * Class that operates on MySQL table '${table_name}'. This class will not be overwritten.
+   * Class that interfaces with database table '${table_name}'.
+   * This class will not be overwritten.
    *
    * @author: Aaron Bean
    *}
