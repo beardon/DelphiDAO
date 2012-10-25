@@ -26,11 +26,11 @@ uses
 var
   generator: TGenerator;
   outputPath: string;
-  templatePath: string;
+  projectPath: string;
 
 procedure ProcessParameters;
 const
-  DEFAULT_TEMPLATE_PATH = '..\..\..\project\resources\templates';
+  DEFAULT_PROJECT_PATH = '..\..\..\project';
   OUTPUT_PATH_PARAM = '-o';
   TEMPLATE_PATH_PARAM = '-t';
 var
@@ -41,19 +41,19 @@ begin
     if (LeftStr(ParamStr(i), 2) = OUTPUT_PATH_PARAM) then
       outputPath := Copy(ParamStr(i), 3, MaxInt);
     if (LeftStr(ParamStr(i), 2) = TEMPLATE_PATH_PARAM) then
-      templatePath := Copy(ParamStr(i), 3, MaxInt);
+      projectPath := Copy(ParamStr(i), 3, MaxInt);
   end;
   if (outputPath = '') then
     outputPath := ExtractFilePath(Application.ExeName);
-  if (templatePath = '') then
-    templatePath := DEFAULT_TEMPLATE_PATH;
+  if (projectPath = '') then
+    projectPath := DEFAULT_PROJECT_PATH;
 end;
 
 begin
   ProcessParameters;
   generator := TGenerator.Create;
   try
-    generator.Generate(outputPath, templatePath);
+    generator.Generate(outputPath, projectPath);
     { TODO -oUser -cConsole Main : Insert code here }
   except
     on E: Exception do
