@@ -103,11 +103,13 @@ var
   code: string;
   fieldMemberName: string;
   tableBaseClass: string;
+  tableDAOName: string;
 begin
   tableBaseClass := TInflector.Classify(TableName);
+  tableDAOName := tableBaseClass + 'DAO';
   fieldMemberName := TInflector.Memberify(FieldName);
   appendedDefault := '';
-  code := 'function T' + tableBaseClass + 'MySQLDAO.DeleteBy' + fieldMemberName + '(const Value: ' + DelphiType + '): Integer;' + CRLF;
+  code := 'function T' + tableDAOName + '.DeleteBy' + fieldMemberName + '(const Value: ' + DelphiType + '): Integer;' + CRLF;
   code := code + 'var' + CRLF;
   code := code + TAB + 'qry: TTBGQuery;' + CRLF;
   code := code + 'begin' + CRLF;
@@ -157,16 +159,18 @@ var
   params: string;
   pkIndexConstant: string;
   tableBaseClass: string;
+  tableDAOName: string;
   tableDTOExtName: string;
 begin
   tableBaseClass := TInflector.Classify(TableName);
+  tableDAOName := tableBaseClass + 'DAO';
   tableDTOExtName := tableBaseClass + 'DTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
-  code := 'function T' + tableBaseClass + 'MySQLDAO.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'Result := QueryBy' + FieldMemberName + 'OrderByIndex(Value, ComparisonOperator, ' + pkIndexConstant + ', TSQLOrderDirection.ASCENDING);' + CRLF;
   code := code + 'end;' + CRLF2;
-  code := code + 'function T' + tableBaseClass + 'MySQLDAO.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'var' + CRLF;
   code := code + TAB + 'qry: TTBGQuery;' + CRLF;
   code := code + 'begin' + CRLF;
@@ -187,7 +191,7 @@ begin
   code := code + TAB + 'Result := getList(qry);' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
   code := code + 'end;' + CRLF2;
-  code := code + 'function T' + tableBaseClass + 'MySQLDAO.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'Result := QueryBy' + FieldMemberName + 'OrderBy(Value, ComparisonOperator, INDEX_FIELD_MAP[OrderIndex] + '' '' + TSQLOrderDirection.INDEX_DIRECTION_MAP[OrderDirection]);' + CRLF;
   code := code + 'end;' + CRLF2;
@@ -295,6 +299,7 @@ var
   functionDeclarations: string;
   implementationCode: string;
   tableBaseClass: string;
+  tableDAOExtName: string;
   tableDAOName: string;
   tableName: string;
   template: TTemplate;
@@ -313,8 +318,9 @@ begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
-      typeName := 'T' + tableDAOName;
-      usesList := usesList + TAB + tableDAOName + ',' + CRLF;
+      tableDAOExtName := tableDAOName + 'Ext';
+      typeName := 'T' + tableDAOExtName;
+      usesList := usesList + TAB + tableDAOExtName + ',' + CRLF;
       functionDeclarations := functionDeclarations + TAB2 + 'class function Get' + tableDAOName + ': ' + typeName + ';' + CRLF;
       implementationCode := implementationCode + 'class function TDAOFactory.Get' + tableDAOName + ': ' + typeName + ';' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
@@ -370,6 +376,7 @@ var
   tableClassBase: string;
   tableDAOInterfaceName: string;
   tableDAOName: string;
+  tableDTOExtName: string;
   tableDTOName: string;
   tableDTOVariableName: string;
   tableName: string;
@@ -391,6 +398,7 @@ begin
       tableDAOName := tableClassBase + 'DAO';
       tableDAOInterfaceName := 'I' + tableDAOName;
       tableDTOName := tableClassBase + 'DTO';
+      tableDTOExtName := tableDTOName + 'Ext';
       tableDTOVariableName := 'A' + tableDTOName;
       Write('Generating ' + '"' + FOutputPath + DAO_PATH + tableDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
@@ -482,7 +490,7 @@ begin
         indexConstants := indexConstants + TAB2 + 'const INDEX_' + UpperCase(firstIndex) + ' = 0;' + CRLF;
       end;
       indices.Free;
-      template.SetPair('dao_class_name', 'T' + tableDTOName);
+      template.SetPair('dao_class_name', 'T' + tableDTOExtName);
       template.SetPair('table_name', tableName);
       template.SetPair('var_name', tableDTOVariableName);
       indexConstants := LeftStr(indexConstants, Length(indexConstants) - 2);
@@ -510,9 +518,9 @@ begin
         template.SetPair('pk_with_s', TInflector.Memberify(pk));
         template.SetPair('update_fields', updateFields);
       end;
-      usesList := TAB + tableDTOName + ',';
+      usesList := TAB + tableDTOExtName + ',';
 {$IFDEF GenerateInterfaces}
-      usesList := CRLF + TAB + tableDAOName + 'Interface,';
+      usesList := usesList + CRLF + TAB + tableDAOName + 'Interfaced,';
 {$ENDIF}
       typeName := 'T' + tableDAOName;
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
