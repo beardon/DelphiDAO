@@ -20,7 +20,7 @@ type
    *
    * @author: Aaron Bean
    *}
-  ${type_name} = class(TObject)
+  ${type_name} = class(TInterfacedObject, ${interface_name})
   private
     const INDEX_FIELD_MAP: ${mapping_array};
     var FConnection: TConnection;

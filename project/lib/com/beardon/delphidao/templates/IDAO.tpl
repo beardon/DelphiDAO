@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}DAO;
+unit ${unit_name};
 
 interface
 
@@ -18,8 +18,8 @@ type
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
     function Delete(const ${pk}: Variant): Integer;
-    function Insert(var ${var_name}: ${dao_class_name}): Integer;
-    function Update(var ${var_name}: ${dao_class_name}): Integer;
+    function Insert(var ${param_name}: ${dao_class_name}): Integer;
+    function Update(var ${param_name}: ${dao_class_name}): Integer;
     function Clean: Integer;
 ${query_by_definitions}
 ${delete_by_definitions}

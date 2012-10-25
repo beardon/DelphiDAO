@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}MySQLDAO;
+unit ${unit_name};
 
 interface
 
@@ -10,24 +10,31 @@ ${uses_list}
   DBClient,
   Generics.Collections,
   Query,
-  QueryExecutor;
+  QueryExecutor,
+  SQLComparisonOperator,
+  SQLOrderDirection;
 
 type
   {**
-   * Class that operates on MySQL table '${table_name}'.
+   * Class that operates on DB table '${table_name}'.
    *
    * @author: Aaron Bean
    *}
   ${type_name} = class(TInterfacedObject, ${interface_name})
+  private
+    const INDEX_FIELD_MAP: ${mapping_array};
+    var FConnection: TConnection;
   protected
-    function ReadRow(const Dataset: TClientDataSet): ${dao_class_name}; 
-    function GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
-    function GetRow(var Query: TTBGQuery): ${dao_class_name};
-    function Execute(var Query: TTBGQuery): TClientDataSet;
-    function ExecuteUpdate(var Query: TTBGQuery): Integer;
-    function QuerySingleResult(var Query: TTBGQuery): string;
-    function ExecuteInsert(var Query: TTBGQuery): Integer;	
+    function ReadRow(const AClientDataset: TClientDataSet): ${dao_class_name}; 
+    function GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
+    function GetRow(var AQuery: TTBGQuery): ${dao_class_name};
+    function Execute(var AQuery: TTBGQuery): TClientDataSet;
+    function ExecuteUpdate(var AQuery: TTBGQuery): Integer;
+    function QuerySingleResult(var AQuery: TTBGQuery): string;
+    function ExecuteInsert(var AQuery: TTBGQuery): Integer;	
   public
+${index_constants}
+    constructor Create(AConnection: TConnection);
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
@@ -35,10 +42,16 @@ type
     function Insert(var ${var_name}: ${dao_class_name}): Integer;
     function Update(var ${var_name}: ${dao_class_name}): Integer;
     function Clean: Integer;
-${public_functions}
+${query_by_definitions}
+${delete_by_definitions}
   end;
 
 implementation
+
+constructor ${type_name}.Create(AConnection: TConnection);
+begin
+  FConnection := AConnection;
+end;
 
 {**
  * Get Domain object by primary key
@@ -46,13 +59,13 @@ implementation
  * @param String Id primary key
  * @return ${dao_class_name}
  *}
-function ${type_name}.Load(const ${pks}: Variant): ${dao_class_name};
+function ${type_name}.Load(const Id: Variant): ${dao_class_name};
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name} WHERE ${pk_where}');
-  ${pk_set}
+  qry.sql.Add('SELECT * FROM ${table_name} WHERE ${pk} = :${pk}');
+  qry.paramByName('${pk}').Value := Id;
   Result := GetRow(qry);
   qry.Free;
 end;
@@ -89,13 +102,13 @@ end;
  * Delete record from table
  * @param ${var_name} primary key
  *}
-function ${type_name}.Delete(const ${pks}: Variant): Integer;
+function ${type_name}.Delete(const ${pk}: Variant): Integer;
 var
   qry: TTBGQuery;
 begin
   qry := TTBGQuery.Create;
-  qry.sql.Add('DELETE FROM ${table_name} WHERE ${pk_where}');
-  ${pk_set}
+  qry.sql.Add('DELETE FROM ${table_name} WHERE ${pk} = :${pk}');
+  qry.paramByName('${pk}').Value := ${pk};
   Result := ExecuteUpdate(qry);
   qry.Free;
 end;
@@ -112,12 +125,12 @@ var
 begin
   qry := TTBGQuery.Create;
   qry.sql.Add('INSERT INTO ${table_name}');
-  qry.sql.Add('(${insert_fields2})');
+  qry.sql.Add('(${insert_fields})');
   qry.sql.Add('VALUES');
-  qry.sql.Add('(${insert_values2})');
+  qry.sql.Add('(${insert_values})');
 ${parameter_setter}
-${pk_set_update}
   id := ExecuteInsert(qry);
+  ${var_name}.${pk_with_s} := id;
   Result := id;
   qry.Free;
 end;
@@ -134,9 +147,9 @@ begin
   qry := TTBGQuery.Create;
   qry.sql.Add('UPDATE ${table_name}');
   qry.sql.Add('SET ${update_fields}');
-  qry.sql.Add('WHERE ${pk_where}');
+  qry.sql.Add('WHERE ${pk} = :${pk_with_s}');
 ${parameter_setter}
-${pk_set_update}
+  qry.paramByName('${pk_with_s}').Value := ${var_name}.${pk_with_s};
   Result := ExecuteUpdate(qry);
   qry.Free;
 end;
@@ -162,30 +175,33 @@ ${delete_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.ReadRow(const Dataset: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const AClientDataset: TClientDataSet): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
   ${var_name} := ${dao_class_name}.Create;
+  if (not AClientDataset.IsEmpty) then
+  begin
 ${read_row}
+  end;
   Result := ${var_name};
 end;
 	
-function ${type_name}.GetList(var Query: TTBGQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
 var
-  dataset: TClientDataSet;
+  aClientDataSet: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  dataset := TQueryExecutor.Execute(Query);
+  aClientDataSet := TQueryExecutor.Execute(AQuery, FConnection);
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
-  while (not dataset.Eof) do
+  while (not aClientDataSet.Eof) do
   begin
-	${var_name}s.Add(ReadRow(dataset));
-    dataset.Next;
+    ${var_name}s.Add(ReadRow(aClientDataSet));
+    aClientDataSet.Next;
   end;
   Result := ${var_name}s;  
-  dataset.Free;
+  aClientDataSet.Free;
 end;
 	
 {**
@@ -193,45 +209,45 @@ end;
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.GetRow(var Query: TTBGQuery): ${dao_class_name};
+function ${type_name}.GetRow(var AQuery: TTBGQuery): ${dao_class_name};
 var
-  dataset: TClientDataSet;
+  aClientDataSet: TClientDataSet;
 begin
-  dataset := TQueryExecutor.Execute(Query);
-  Result := readRow(dataset);
-  dataset.Free;
+  aClientDataSet := TQueryExecutor.Execute(AQuery);
+  Result := ReadRow(aClientDataSet);
+  aClientDataSet.Free;
 end; 
 	
 {**
  * Execute sql query
  *}
-function ${type_name}.Execute(var Query: TTBGQuery): TClientDataSet;
+function ${type_name}.Execute(var AQuery: TTBGQuery): TClientDataSet;
 begin
-  Result := TQueryExecutor.Execute(Query);
+  Result := TQueryExecutor.Execute(AQuery, FConnection);
 end; 
 
 {**
  * Execute sql query
  *}
-function ${type_name}.ExecuteUpdate(var Query: TTBGQuery): Integer;
+function ${type_name}.ExecuteUpdate(var AQuery: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.ExecuteUpdate(Query);
+  Result := TQueryExecutor.ExecuteUpdate(AQuery, FConnection);
 end; 
 
 {**
  * Query for one row and one column
  *}
-function ${type_name}.QuerySingleResult(var Query: TTBGQuery): string;
+function ${type_name}.QuerySingleResult(var AQuery: TTBGQuery): string;
 begin
-  Result := TQueryExecutor.queryForString(Query);
+  Result := TQueryExecutor.QueryForString(AQuery, FConnection);
 end; 
 
 {**
  * Insert row to table
  *}
-function ${type_name}.ExecuteInsert(var Query: TTBGQuery): Integer;
+function ${type_name}.ExecuteInsert(var AQuery: TTBGQuery): Integer;
 begin
-  Result := TQueryExecutor.ExecuteInsert(Query);
+  Result := TQueryExecutor.ExecuteInsert(AQuery, FConnection);
 end; 
 
 end.

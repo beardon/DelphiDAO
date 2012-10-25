@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}DAO;
+unit ${unit_name};
 
 interface
 

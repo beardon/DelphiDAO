@@ -24,8 +24,9 @@ uses
   hashes in 'lib\com\beardon\utils\hashes.pas';
 
 var
-  OutputPath: string;
-  TemplatePath: string;
+  generator: TGenerator;
+  outputPath: string;
+  templatePath: string;
 
 procedure ProcessParameters;
 const
@@ -38,23 +39,25 @@ begin
   for i := 1 to ParamCount do
   begin
     if (LeftStr(ParamStr(i), 2) = OUTPUT_PATH_PARAM) then
-      OutputPath := Copy(ParamStr(i), 3, MaxInt);
+      outputPath := Copy(ParamStr(i), 3, MaxInt);
     if (LeftStr(ParamStr(i), 2) = TEMPLATE_PATH_PARAM) then
-      TemplatePath := Copy(ParamStr(i), 3, MaxInt);
+      templatePath := Copy(ParamStr(i), 3, MaxInt);
   end;
-  if (OutputPath = '') then
-    OutputPath := ExtractFilePath(Application.ExeName);
-  if (TemplatePath = '') then
-    TemplatePath := DEFAULT_TEMPLATE_PATH;
+  if (outputPath = '') then
+    outputPath := ExtractFilePath(Application.ExeName);
+  if (templatePath = '') then
+    templatePath := DEFAULT_TEMPLATE_PATH;
 end;
 
 begin
   ProcessParameters;
+  generator := TGenerator.Create;
   try
-    TGenerator.Generate(OutputPath, TemplatePath);
+    generator.Generate(outputPath, templatePath);
     { TODO -oUser -cConsole Main : Insert code here }
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
   end;
+  generator.Free;
 end.

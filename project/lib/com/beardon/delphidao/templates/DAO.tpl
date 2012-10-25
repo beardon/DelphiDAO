@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}MySQLDAO;
+unit ${unit_name};
 
 interface
 
@@ -16,11 +16,11 @@ ${uses_list}
 
 type
   {**
-   * Class that operates on MySQL table '${table_name}'.
+   * Class that operates on DB table '${table_name}'.
    *
    * @author: Aaron Bean
    *}
-  ${type_name} = class(TInterfacedObject, ${interface_name})
+  ${type_name} = class(TObject)
   private
     const INDEX_FIELD_MAP: ${mapping_array};
     var FConnection: TConnection;

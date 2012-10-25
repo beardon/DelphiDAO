@@ -1,3 +1,4 @@
+{$I .\Defines.inc}
 unit Generator;
 
 interface
@@ -15,28 +16,31 @@ type
     VarName: string;
   end;
 
-  TGenerator = class
+  TGenerator = class(TObject)
   private
-    class procedure Init(OutputPath, TemplatePath: string);
-    class procedure CleanDirectory(Path: string);
-    class function CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
-    class function CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
-    class function CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
-    class function CreateQueryByFunctions(const TableName, FieldName, FieldMemberName, DelphiType, PrimaryKeyIndex: string): string;
-    class function DoesTableContainPK(const TableName: string): Boolean;
-    class procedure GenerateDAOFactory(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDAOExtObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDTOExtObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateDTOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateIDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
-    class procedure GenerateStoredRoutines(const OutputPath, TemplatePath: string);
-    class function GetFields(const TableName: string): TClientDataSet;
-    class function GetIndices(const TableName: string): TStringList;
-    class function GetRoutineParameters(const CreateSQL: string; const IsFunction: Boolean): TList<TRoutineParameter>;
-    class function GetRoutineReturnType(const CreateSQL: string): string;
+    FOutputPath: string;
+    FTablesDataSet: TClientDataSet;
+    FTemplatePath: string;
+    procedure CleanDirectory(Path: string);
+    function CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
+    function CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
+    function CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
+    function CreateQueryByFunctions(const TableName, FieldName, FieldMemberName, DelphiType, PrimaryKeyIndex: string): string;
+    function DoesTableContainPK(const TableName: string): Boolean;
+    procedure GenerateDAOExtObjects;
+    procedure GenerateDAOFactory;
+    procedure GenerateDAOObjects;
+    procedure GenerateDTOExtObjects;
+    procedure GenerateDTOObjects;
+    procedure GenerateIDAOObjects;
+    procedure GenerateStoredRoutines;
+    function GetFields(const TableName: string): TClientDataSet;
+    function GetIndices(const TableName: string): TStringList;
+    function GetRoutineParameters(const CreateSQL: string; const IsFunction: Boolean): TList<TRoutineParameter>;
+    function GetRoutineReturnType(const CreateSQL: string): string;
+    procedure Initialize;
   public
-    class procedure Generate(OutputPath, TemplatePath: string); static;
+    procedure Generate(OutputPath, TemplatePath: string);
   end;
 
 implementation
@@ -54,61 +58,21 @@ uses
   Windows;
 
 const
+  CLASSES_PATH = '\classes';
+  INTERFACES_PATH = '\interfaces';
+  CORE_PATH = CLASSES_PATH + '\core';
+  DAO_PATH = CLASSES_PATH + '\dao';
+  DAO_EXT_PATH = DAO_PATH + '\ext';
+  DTO_PATH = CLASSES_PATH + '\dto';
+  DTO_EXT_PATH = DTO_PATH + '\ext';
+  IDAO_PATH = INTERFACES_PATH + '\dao';
+  SQL_PATH = CLASSES_PATH + '\sql';
   CRLF = #13#10;
   CRLF2 = CRLF + CRLF;
   TAB = '  ';
   TAB2 = TAB + TAB;
 
-class procedure TGenerator.Generate(OutputPath, TemplatePath: string);
-var
-  qry: TTBGQuery;
-  ds: TClientDataSet;
-begin
-  Init(OutputPath, TemplatePath);
-  qry := TTBGQuery.Create;
-  qry.SQL.Add('SHOW TABLES');
-  ds := TQueryExecutor.Execute(qry);
-  qry.Free;
-  GenerateDTOObjects(ds, OutputPath, TemplatePath);
-  GenerateDTOExtObjects(ds, OutputPath, TemplatePath);
-	GenerateDAOObjects(ds, OutputPath, TemplatePath);
-	GenerateDAOExtObjects(ds, OutputPath, TemplatePath);
-	GenerateIDAOObjects(ds, OutputPath, TemplatePath);
-	GenerateDAOFactory(ds, OutputPath, TemplatePath);
-  GenerateStoredRoutines(OutputPath, TemplatePath);
-  ds.Free;
-end;
-
-class procedure TGenerator.Init(OutputPath, TemplatePath: string);
-begin
-	CreateDir(OutputPath);
-	CreateDir(OutputPath + '\class');
-	CreateDir(OutputPath + '\class\core');
-	CreateDir(OutputPath + '\class\dao');
-	CreateDir(OutputPath + '\class\dto');
-	CreateDir(OutputPath + '\class\dto\ext');
-	CreateDir(OutputPath + '\class\mysql');
-	CreateDir(OutputPath + '\class\mysql\ext');
-	CreateDir(OutputPath + '\class\sql');
-// need to compare files, so cannot blanket delete
-//	CleanDirectory(OutputPath + '\class\dao');
-//  CleanDirectory(OutputPath + '\class\dto');
-//	CleanDirectory(OutputPath + '\class\mysql');
-  CopyFile(PChar(TemplatePath + '\class\dao\core\ArrayList.pas'), PChar(OutputPath + '\class\core\ArrayList.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\Connection.pas'), PChar(OutputPath + '\class\sql\Connection.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\ConnectionFactory.pas'), PChar(OutputPath + '\class\sql\ConnectionFactory.pas'), False);
-  // do not overwrite connection properties if they already exist
-  if (not FileExists(OutputPath + '\class\sql\ConnectionProperty.pas')) then
-    CopyFile(PChar(TemplatePath + '\ConnectionProperty.tpl'), PChar(OutputPath + '\class\sql\ConnectionProperty.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\Query.pas'), PChar(OutputPath + '\class\sql\Query.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\QueryExecutor.pas'), PChar(OutputPath + '\class\sql\QueryExecutor.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\QueryFactory.pas'), PChar(OutputPath + '\class\sql\QueryFactory.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\SQLComparisonOperator.pas'), PChar(OutputPath + '\class\sql\SQLComparisonOperator.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\SQLOrderDirection.pas'), PChar(OutputPath + '\class\sql\SQLOrderDirection.pas'), False);
-  CopyFile(PChar(TemplatePath + '\class\dao\sql\Transaction.pas'), PChar(OutputPath + '\class\sql\Transaction.pas'), False);
-end;
-
-class procedure TGenerator.CleanDirectory(Path: string);
+procedure TGenerator.CleanDirectory(Path: string);
 var
   fileInfo: TSearchRec;
 begin
@@ -119,7 +83,7 @@ begin
   SysUtils.FindClose(fileInfo);
 end;
 
-class function TGenerator.CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
+function TGenerator.CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
 var
   code: string;
   fieldMemberName: string;
@@ -129,7 +93,7 @@ begin
   Result := code;
 end;
 
-class function TGenerator.CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
+function TGenerator.CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
 var
   code, appendedDefault: string;
   fieldMemberName, tableClassName: string;
@@ -150,7 +114,7 @@ begin
   Result := code;
 end;
 
-class function TGenerator.CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
+function TGenerator.CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
 var
   code, pkIndexConstant: string;
   appendedComparisonOperatorDefault, appendedOrderClauseDefault, appendedOrderIndexDefault, appendedOrderDirectionDefault: string;
@@ -176,7 +140,7 @@ begin
   Result := code;
 end;
 
-class function TGenerator.CreateQueryByFunctions(const TableName, FieldName, FieldMemberName, DelphiType, PrimaryKeyIndex: string): string;
+function TGenerator.CreateQueryByFunctions(const TableName, FieldName, FieldMemberName, DelphiType, PrimaryKeyIndex: string): string;
 var
   code, params, pkIndexConstant: string;
   tableClassName, tableClassExtName: string;
@@ -216,7 +180,7 @@ begin
   Result := code;
 end;
 
-class function TGenerator.DoesTableContainPK(const TableName: string): Boolean;
+function TGenerator.DoesTableContainPK(const TableName: string): Boolean;
 var
   ds: TClientDataSet;
   success: Boolean;
@@ -237,85 +201,72 @@ begin
   Result := success;
 end;
 
-class procedure TGenerator.GenerateDAOFactory(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+procedure TGenerator.Generate(OutputPath, TemplatePath: string);
 var
-  tableName, tableClassName,
-  usesList, functionDeclarations, implementationCode: string;
-  template: TTemplate;
+  qry: TTBGQuery;
 begin
-{$IFNDEF CONSOLE}
-  AllocConsole;
+  FOutputPath := OutputPath;
+  FTemplatePath := TemplatePath;
+  Initialize;
+  qry := TTBGQuery.Create;
+  qry.SQL.Add('SHOW TABLES');
+  FTablesDataSet := TQueryExecutor.Execute(qry);
+  qry.Free;
+  GenerateDTOObjects;
+  GenerateDTOExtObjects;
+	GenerateDAOObjects;
+	GenerateDAOExtObjects;
+{$IFDEF GenerateInterfaces}
+	GenerateIDAOObjects;
 {$ENDIF}
-  Write('Generating ' + '"' + OutputPath + '\class\dao\DAOFactory.pas"...');
-  with (AClientDataSet) do
-  begin
-    First;
-    while (not Eof) do
-    begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName);
-      usesList := usesList + TAB + tableClassName + 'MySQLExtDAO,' + CRLF;
-      functionDeclarations := functionDeclarations + TAB2 + 'class function Get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
-      implementationCode := implementationCode + 'class function TDAOFactory.Get' + tableClassName + 'DAO: T' + tableClassName + 'MySQLExtDAO;' + CRLF;
-      implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'Result := T' + tableClassName + 'MySQLExtDAO.Create(FConnection);' + CRLF;
-      implementationCode := implementationCode + 'end;' + CRLF;
-      implementationCode := implementationCode + CRLF;
-      Next;
-    end;
-    usesList := LeftStr(usesList, Length(usesList) - 3) + ';';
-    functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
-    implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(TemplatePath + '\DAOFactory.tpl');
-    template.SetPair('uses_list', usesList);
-    template.SetPair('function_declarations', functionDeclarations);
-    template.SetPair('implementation_code', implementationCode);
-    template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-    template.Write('' + OutputPath + '\class\dao\DAOFactory.pas');
-    template.Free;
-    WriteLn(' done.');
-  end;
-{$IFNDEF CONSOLE}
-  FreeConsole;
-{$ENDIF}
+	GenerateDAOFactory;
+  GenerateStoredRoutines;
+  FTablesDataSet.Free;
 end;
 
-class procedure TGenerator.GenerateDAOExtObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+procedure TGenerator.GenerateDAOExtObjects;
 var
-  tableName, tableClassName,
-  typeName, ancestorTypeName, usesList: string;
+  ancestorTypeName: string;
+  tableBaseClass: string;
+  tableDAOExtName: string;
+  tableDAOName: string;
+  tableName: string;
   template: TTemplate;
+  typeName: string;
+  usesList: string;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (AClientDataSet) do
+  with (FTablesDataSet) do
   begin
     First;
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName);
-      if (not FileExists('' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas')) then
+      tableBaseClass := TInflector.Classify(tableName);
+      tableDAOName := tableBaseClass + 'DAO';
+      tableDAOExtName := tableDAOName + 'Ext';
+      if (not FileExists('' + FOutputPath + DAO_EXT_PATH + '\' + tableDAOExtName + '.pas')) then
       begin
-        Write('Generating ' + '"' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas"...');
-        usesList := TAB + tableClassName + 'MySQLDAO;';
-        template := TTemplate.Create(TemplatePath + '\DAOExt.tpl', NO_UPDATE_FILES);
-        template.SetPair('unit_name', tableClassName);
-        template.SetPair('uses_list', usesList);
+        Write('Generating ' + '"' + FOutputPath + DAO_EXT_PATH + '\' + tableDAOExtName + '.pas"...');
+        usesList := TAB + tableDAOName + ';';
+        template := TTemplate.Create(FTemplatePath + '\DAOExt.tpl', NO_UPDATE_FILES);
         template.SetPair('table_name', tableName);
-        typeName := 'T' + tableClassName + 'MySQLExtDAO';
-        ancestorTypeName := 'T' + tableClassName + 'MySQLDAO';
-        template.SetPair('type_name', typeName);
+        template.SetPair('unit_name', tableBaseClass);
+        template.SetPair('uses_list', usesList);
+        typeName := 'T' + tableDAOExtName;
+        ancestorTypeName := 'T' + tableDAOName;
         template.SetPair('ancestor_type_name', ancestorTypeName);
         template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-        template.Write('' + OutputPath + '\class\mysql\ext\' + tableClassName + 'MySQLExtDAO.pas');
+        template.SetPair('type_name', typeName);
+        template.Write('' + FOutputPath + DAO_EXT_PATH + '\' + tableDAOExtName + '.pas');
         template.Free;
         WriteLn(' done.');
       end
       else
       begin
-        WriteLn('"' + OutputPath + '\class\mysql\ext\' + tableName + 'MySQLExtDAO.pas" already exists.');
+        WriteLn('"' + FOutputPath + DAO_EXT_PATH + '\' + tableDAOExtName + '.pas" already exists (extended classes are not overwritten).');
       end;
       Next;
     end;
@@ -325,37 +276,109 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+procedure TGenerator.GenerateDAOFactory;
 var
-  i: Integer;
-  tableName, tableClassName, usesList, interfaceName, firstIndex,
-  typeName, privateVars, publicConstants, publicProperties, tableClassExtName, tableClassVarName,
-  fieldName, fieldMemberName, sqlType, delphiType, asType, s, s2, s3, s4: string;
-  parameterSetter, insertFields, insertFields2, updateFields, insertValues,
-  insertValues2, readRow, pk, queryByDef, deleteByDef,
-  mappingArray, indexConstants,
-  queryByFunc, deleteByFunc: string;
-  pks: array of string;
+  functionDeclarations: string;
+  implementationCode: string;
+  tableBaseClass: string;
+  tableDAOName: string;
+  tableName: string;
   template: TTemplate;
-  ds: TClientDataSet;
-  hasPK: Boolean;
-  indices: TStringList;
-  isNullable: Boolean;
-  fieldMemberNames: TStringList;
+  typeName: string;
+  usesList: string;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (AClientDataSet) do
+  Write('Generating ' + '"' + FOutputPath + DAO_PATH + '\DAOFactory.pas"...');
+  with (FTablesDataSet) do
   begin
     First;
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName);
-      tableClassExtName := tableClassName + 'Ext';
-      tableClassVarName := 'A' + tableClassExtName;
-      Write('Generating ' + '"' + OutputPath + '\class\mysql\' + tableClassName + 'MySQLDAO.pas"...');
+      tableBaseClass := TInflector.Classify(tableName);
+      tableDAOName := tableBaseClass + 'DAO';
+      typeName := 'T' + tableDAOName;
+      usesList := usesList + TAB + tableDAOName + ',' + CRLF;
+      functionDeclarations := functionDeclarations + TAB2 + 'class function Get' + tableDAOName + ': ' + typeName + ';' + CRLF;
+      implementationCode := implementationCode + 'class function TDAOFactory.Get' + tableDAOName + ': ' + typeName + ';' + CRLF;
+      implementationCode := implementationCode + 'begin' + CRLF;
+      implementationCode := implementationCode + TAB + 'Result := ' + typeName + '.Create(FConnection);' + CRLF;
+      implementationCode := implementationCode + 'end;' + CRLF;
+      implementationCode := implementationCode + CRLF;
+      Next;
+    end;
+    usesList := LeftStr(usesList, Length(usesList) - 3) + ';';
+    functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
+    implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
+    template := TTemplate.Create(FTemplatePath + '\DAOFactory.tpl');
+    template.SetPair('uses_list', usesList);
+    template.SetPair('function_declarations', functionDeclarations);
+    template.SetPair('implementation_code', implementationCode);
+    template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
+    template.Write('' + FOutputPath + DAO_PATH + '\DAOFactory.pas');
+    template.Free;
+    WriteLn(' done.');
+  end;
+{$IFNDEF CONSOLE}
+  FreeConsole;
+{$ENDIF}
+end;
+
+procedure TGenerator.GenerateDAOObjects;
+var
+  asType: string;
+  deleteByDef: string;
+  deleteByFunc: string;
+  delphiType: string;
+  ds: TClientDataSet;
+  fieldMemberName: string;
+  fieldMemberNames: TStringList;
+  fieldName: string;
+  firstIndex: string;
+  hasPK: Boolean;
+  i: Integer;
+  indexConstants: string;
+  indices: TStringList;
+  insertFields: string;
+  insertValues: string;
+  interfaceName: string;
+  isNullable: Boolean;
+  mappingArray: string;
+  parameterSetter: string;
+  pk: string;
+  pkCount: Integer;
+  queryByDef: string;
+  queryByFunc: string;
+  readRow: string;
+  sqlType: string;
+  tableClassBase: string;
+  tableDAOInterfaceName: string;
+  tableDAOName: string;
+  tableDTOName: string;
+  tableDTOVariableName: string;
+  tableName: string;
+  template: TTemplate;
+  typeName: string;
+  updateFields: string;
+  usesList: string;
+begin
+{$IFNDEF CONSOLE}
+  AllocConsole;
+{$ENDIF}
+  with (FTablesDataSet) do
+  begin
+    First;
+    while (not Eof) do
+    begin
+      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableClassBase := TInflector.Classify(tableName);
+      tableDAOName := tableClassBase + 'DAO';
+      tableDAOInterfaceName := 'I' + tableDAOName;
+      tableDTOName := tableClassBase + 'DTO';
+      tableDTOVariableName := 'A' + tableDTOName;
+      Write('Generating ' + '"' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
       ds := GetFields(tableName);
       indices := GetIndices(tableName);
@@ -363,24 +386,24 @@ begin
         firstIndex := indices[0]
       else
         firstIndex := ds.FieldByName('Field').AsString;
-      parameterSetter := CRLF;
-      insertFields := '';
-      updateFields := '';
-      insertValues := '';
-      readRow := CRLF;
-      pk := '';
-      SetLength(pks, 0);
-      queryByDef := '';
-      queryByFunc := '';
       deleteByDef := '';
       deleteByFunc := '';
+      insertFields := '';
+      insertValues := '';
+      pk := '';
+      queryByDef := '';
+      queryByFunc := '';
+      updateFields := '';
+      parameterSetter := CRLF;
+      readRow := CRLF;
+      pkCount := 0;
       fieldMemberNames := TStringList.Create;
       with (ds) do
       while (not Eof) do
       begin
         fieldName := FieldByName('Field').AsString;
-        i := 1;
         fieldMemberName := TInflector.Memberify(fieldName);
+        i := 1;
         while (fieldMemberNames.IndexOf(fieldMemberName) > -1) do
         begin
           Inc(i);
@@ -394,8 +417,7 @@ begin
         if (FieldByName('Key').AsString = 'PRI') then
         begin
           pk := fieldName;
-          SetLength(pks, Length(pks) + 1);
-          pks[Length(pks) - 1] := fieldName;
+          Inc(pkCount);
         end
         else
         begin
@@ -404,27 +426,35 @@ begin
             insertFields := insertFields + fieldName + ', ';
             updateFields := updateFields + fieldName + ' = :' + fieldMemberName + ', ';
             insertValues := insertValues + ':' + fieldMemberName + ', ';
-            parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := ' + tableClassVarName + '.' + fieldMemberName + ';' + CRLF;
+            parameterSetter := parameterSetter + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := ' + tableDTOVariableName + '.' + fieldMemberName + ';' + CRLF;
             deleteByDef := deleteByDef + CreateDeleteByDefinition(fieldName, delphiType);
             deleteByFunc := deleteByFunc + CreateDeleteByFunction(tableName, fieldName, delphiType);
           end;
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldMemberName, delphiType, True, firstIndex);
           queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, fieldMemberName, delphiType, firstIndex);
         end;
-        readRow := readRow + TAB2 + tableClassVarName + '.' + fieldMemberName + ' := AClientDataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
+        readRow := readRow + TAB2 + tableDTOVariableName + '.' + fieldMemberName + ' := AClientDataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
       end;
       fieldMemberNames.Free;
       ds.Free;
       if (hasPK) then
       begin
-        if (Length(pks) = 1) then
-          template := TTemplate.Create(TemplatePath + '\DAO.tpl')
+        if (pkCount = 1) then
+{$IFDEF GenerateInterfaces}
+          template := TTemplate.Create(FTemplatePath + '\DAOInterfaced.tpl')
+{$ELSE}
+          template := TTemplate.Create(FTemplatePath + '\DAO.tpl')
+{$ENDIF}
         else
-          template := TTemplate.Create(TemplatePath + '\DAOComplexPK.tpl');
+          WriteLn(' skipped (no support for composite primary keys).');
       end
       else
-        template := TTemplate.Create(TemplatePath + '\DAOView.tpl');
+{$IFDEF GenerateInterfaces}
+        template := TTemplate.Create(FTemplatePath + '\DAOViewInterfaced.tpl');
+{$ELSE}
+        template := TTemplate.Create(FTemplatePath + '\DAOView.tpl');
+{$ENDIF}
       indexConstants := '';
       if (indices.Count > 0) then
       begin
@@ -438,84 +468,53 @@ begin
         indexConstants := indexConstants + TAB2 + 'const INDEX_' + UpperCase(firstIndex) + ' = 0;' + CRLF;
       end;
       indices.Free;
-      template.SetPair('dao_class_name', 'T' + tableClassExtName);
+      template.SetPair('dao_class_name', 'T' + tableDTOName);
       template.SetPair('table_name', tableName);
-      template.SetPair('var_name', tableClassVarName);
+      template.SetPair('var_name', tableDTOVariableName);
+      indexConstants := LeftStr(indexConstants, Length(indexConstants) - 2);
       insertFields := LeftStr(insertFields, Length(insertFields) - 1);
-      updateFields := LeftStr(updateFields, Length(updateFields) - 1);
       insertValues := LeftStr(insertValues, Length(insertValues) - 1);
       queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
       queryByFunc := LeftStr(queryByFunc, Length(queryByFunc) - 2);
       deleteByDef := LeftStr(deleteByDef, Length(deleteByDef) - 2);
       deleteByFunc := LeftStr(deleteByFunc, Length(deleteByFunc) - 2);
-      indexConstants := LeftStr(indexConstants, Length(indexConstants) - 2);
+      updateFields := LeftStr(updateFields, Length(updateFields) - 1);
       if (hasPK) then
       begin
         template.SetPair('pk', pk);
-        s := '';
-        s2 := '';
-        s3 := '';
-        s4 := '';
-        insertFields2 := insertFields;
-        insertValues2 := insertValues;
-        for i := 0 to High(pks) do
-        begin
-          insertValues2 := insertValues2 + ', ?';
-          if (i > 0) then
-          begin
-            s := s + ', ';
-            s2 := s2 + ' AND ';
-            s3 := s3 + TAB2;
-          end;
-          insertFields2 := insertFields2 + ', ' + pks[i];
-          s := s + '$' + TInflector.Memberify(pks[i]);
-          s2 := s2 + pks[i] + ' = ?';
-          s3 := s3 + '$sqlQuery->setNumber($' + TInflector.Memberify(pks[i]) + ');';
-          s3 := s3 + CRLF;
-          s4 := s4 + CRLF + TAB2;
-          s4 := s4 + '$sqlQuery->setNumber($' + tableClassExtName + '->' + TInflector.Memberify(pks[i]) + ');';
-          s4 := s4 + CRLF;
-        end;
-        if (s[1] = ',') then
-          s := Copy(s, 2, MaxInt);
-        if (insertValues2[1] = ',') then
-          insertValues2 := Copy(insertValues2, 2, MaxInt);
-        if (insertFields2[1] = ',') then
-          insertFields2 := Copy(insertFields2, 2, MaxInt);
         insertFields := LeftStr(insertFields, Length(insertFields) - 1);
         insertFields := TDelphinator.ConcatLongString(insertFields, True);
-        updateFields := LeftStr(updateFields, Length(updateFields) - 1);
-        updateFields := TDelphinator.ConcatLongString(updateFields, True);
         insertValues := LeftStr(insertValues, Length(insertValues) - 1);
         insertValues := TDelphinator.ConcatLongString(insertValues, True);
-        template.SetPair('insert_values2', insertValues2);
-        template.SetPair('insert_fields2', insertFields2);
-        template.SetPair('pk_set_update', s4);
-        template.SetPair('pk_set', s3);
-        template.SetPair('pk_where', s2);
-        template.SetPair('pks', s);
-        template.SetPair('pk_with_s', TInflector.Memberify(pk));
-        template.SetPair('insert_fields', insertFields);
-        template.SetPair('update_fields', updateFields);
-        template.SetPair('insert_values', insertValues);
-        template.SetPair('parameter_setter', parameterSetter);
+        updateFields := LeftStr(updateFields, Length(updateFields) - 1);
+        updateFields := TDelphinator.ConcatLongString(updateFields, True);
         template.SetPair('delete_by_definitions', deleteByDef);
         template.SetPair('delete_by_functions', deleteByFunc);
+        template.SetPair('insert_fields', insertFields);
+        template.SetPair('insert_values', insertValues);
+        template.SetPair('parameter_setter', parameterSetter);
+        template.SetPair('pk_with_s', TInflector.Memberify(pk));
+        template.SetPair('update_fields', updateFields);
       end;
-      usesList := TAB + tableClassExtName + ',' + CRLF + TAB + tableClassName + 'DAO,';
-      typeName := 'T' + tableClassName + 'MySQLDAO';
-      interfaceName := 'I' + tableClassName + 'DAO';
-      template.SetPair('unit_name', tableClassName);
-      template.SetPair('uses_list', usesList);
-      template.SetPair('type_name', typeName);
-      template.SetPair('interface_name', interfaceName);
-      template.SetPair('read_row', readRow);
+      usesList := TAB + tableDTOName + ',';
+{$IFDEF GenerateInterfaces}
+      usesList := CRLF + TAB + tableDAOName + 'Interface,';
+{$ENDIF}
+      typeName := 'T' + tableDAOName;
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
+      template.SetPair('index_constants', indexConstants);
+{$IFDEF GenerateInterfaces}
+      interfaceName := 'I' + tableDAOName;
+      template.SetPair('interface_name', interfaceName);
+{$ENDIF}
+      template.SetPair('mapping_array', mappingArray);
       template.SetPair('query_by_definitions', queryByDef);
       template.SetPair('query_by_functions', queryByFunc);
-      template.SetPair('mapping_array', mappingArray);
-      template.SetPair('index_constants', indexConstants);
-      template.Write('' + OutputPath + '\class\mysql\' + tableClassName + 'MySQLDAO.pas');
+      template.SetPair('read_row', readRow);
+      template.SetPair('type_name', typeName);
+      template.SetPair('unit_name', tableClassBase);
+      template.SetPair('uses_list', usesList);
+      template.Write('' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas');
       template.Free;
       WriteLn(' done.');
       Next;
@@ -526,44 +525,52 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDTOExtObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+procedure TGenerator.GenerateDTOExtObjects;
 var
-  tableName, tableClassName, pointerTypeName,
-  typeName, ancestorTypeName, usesList: string;
+  ancestorTypeName: string;
+  pointerTypeName: string;
+  tableClassBase: string;
+  tableDTOExtName: string;
+  tableDTOName: string;
+  tableName: string;
   template: TTemplate;
+  typeName: string;
+  usesList: string;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (AClientDataSet) do
+  with (FTablesDataSet) do
   begin
     First;
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName) + 'DTO';
-      typeName := 'T' + tableClassName + 'Ext';
-      ancestorTypeName := 'T' + tableClassName;
-      pointerTypeName := 'P' + tableClassName + 'Ext';
-      usesList := TAB + tableClassName + ';';
-      if (not FileExists('' + OutputPath + '\class\dto\ext\' + tableClassName + 'Ext.pas')) then
+      tableClassBase := TInflector.Classify(tableName);
+      tableDTOName := tableClassBase + 'DTO';
+      tableDTOExtName := tableDTOName + 'Ext';
+      typeName := 'T' + tableDTOExtName;
+      ancestorTypeName := 'T' + tableDTOName;
+      pointerTypeName := 'P' + tableDTOExtName;
+      usesList := TAB + tableDTOName + ';';
+      if (not FileExists('' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas')) then
       begin
-        Write('Generating ' + '"' + OutputPath + '\class\dto\ext\' + tableClassName + 'Ext.pas"...');
-        template := TTemplate.Create(TemplatePath + '\DTOExt.tpl', NO_UPDATE_FILES);
-        template.SetPair('unit_name', tableClassName);
-        template.SetPair('uses_list', usesList);
+        Write('Generating ' + '"' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas"...');
+        template := TTemplate.Create(FTemplatePath + '\DTOExt.tpl', NO_UPDATE_FILES);
+        template.SetPair('ancestor_type_name', ancestorTypeName);
+        template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
+        template.SetPair('pointer_type_name', pointerTypeName);
         template.SetPair('table_name', tableName);
         template.SetPair('type_name', typeName);
-        template.SetPair('ancestor_type_name', ancestorTypeName);
-        template.SetPair('pointer_type_name', pointerTypeName);
-        template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-        template.Write('' + OutputPath + '\class\dto\ext\' + tableClassName + 'Ext.pas');
+        template.SetPair('unit_name', tableDTOName);
+        template.SetPair('uses_list', usesList);
+        template.Write('' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas');
         template.Free;
         WriteLn(' done.');
       end
       else
       begin
-        WriteLn('"' + OutputPath + '\class\dto\ext\' + tableName + 'Ext.pas" already exists.');
+        WriteLn('"' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas" already exists (extended classes are not overwritten).');
       end;
       Next;
     end;
@@ -573,43 +580,54 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateDTOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+procedure TGenerator.GenerateDTOObjects;
 var
-  tableName, tableClassName, typeName, typeParamName,
-  pointerTypeName, protectedVars, publicConstants, publicProperties, assignAssignments,
-  fieldName, fieldMemberName, sqlType, delphiType: string;
-  isNullable: Boolean;
-  template: TTemplate;
+  assignAssignments: string;
+  delphiType: string;
   ds: TClientDataSet;
+  fieldMemberName: string;
   fieldMemberNames: TStringList;
+  fieldName: string;
   i: Integer;
-  s : TField;
+  isNullable: Boolean;
+  pointerTypeName: string;
+  publicConstants: string;
+  publicProperties: string;
+  protectedVars: string;
+  sqlType: string;
+  tableBaseClass: string;
+  tableDTOName: string;
+  tableDTOVariableName: string;
+  tableName: string;
+  template: TTemplate;
+  typeName: string;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (AClientDataSet) do
+  with (FTablesDataSet) do
   begin
     First;
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName) + 'DTO';
-      Write('Generating ' + '"' + OutputPath + '\class\dto\' + tableClassName + '.pas"...');
-      template := TTemplate.Create(TemplatePath + '\DTO.tpl');
-      template.SetPair('unit_name', tableClassName);
+      tableBaseClass := TInflector.Classify(tableName);
+      tableDTOName := tableBaseClass + 'DTO';
+      Write('Generating ' + '"' + FOutputPath + DTO_PATH + '\' + tableDTOName + '.pas"...');
+      template := TTemplate.Create(FTemplatePath + '\DTO.tpl');
       template.SetPair('table_name', tableName);
-      typeName := 'T' + tableClassName;
-      typeParamName := 'A' + tableClassName;
-      pointerTypeName := 'P' + tableClassName;
-      template.SetPair('type_name', typeName);
-      template.SetPair('type_param_name', typeParamName);
+      template.SetPair('unit_name', tableDTOName);
+      typeName := 'T' + tableDTOName;
+      tableDTOVariableName := 'A' + tableDTOName;
+      pointerTypeName := 'P' + tableDTOName;
       template.SetPair('pointer_type_name', pointerTypeName);
+      template.SetPair('type_name', typeName);
+      template.SetPair('var_name', tableDTOVariableName);
       publicConstants := TAB2 + 'const TABLE_NAME = ''' + tableName + ''';';
       template.SetPair('public_constants', publicConstants);
+      assignAssignments := '';
       protectedVars := '';
       publicProperties := '';
-      assignAssignments := '';
       ds := GetFields(tableName);
       fieldMemberNames := TStringList.Create;
       while (not ds.Eof) do
@@ -628,7 +646,7 @@ begin
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
         protectedVars := protectedVars + TAB2 + 'F' + fieldMemberName + ': ' + delphiType + '; //' + sqlType + CRLF;
         publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + delphiType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
-        assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + typeParamName + ').' + fieldMemberName + ';' + CRLF;
+        assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + tableDTOVariableName + ').' + fieldMemberName + ';' + CRLF;
         ds.Next;
       end;
       fieldMemberNames.Free;
@@ -636,11 +654,11 @@ begin
       protectedVars := LeftStr(protectedVars, Length(protectedVars) - 2);
       publicProperties := LeftStr(publicProperties, Length(publicProperties) - 2);
       assignAssignments := LeftStr(assignAssignments, Length(assignAssignments) - 2);
-      template.SetPair('protected_vars', protectedVars);
-      template.SetPair('public_properties', publicProperties);
       template.SetPair('assign_assignments', assignAssignments);
       template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-      template.Write('' + OutputPath + '\class\dto\' + tableClassName + '.pas');
+      template.SetPair('protected_vars', protectedVars);
+      template.SetPair('public_properties', publicProperties);
+      template.Write('' + FOutputPath + DTO_PATH + '\' + tableDTOName + '.pas');
       template.Free;
       WriteLn(' done.');
       Next;
@@ -651,41 +669,54 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGenerator.GenerateIDAOObjects(const AClientDataSet: TClientDataSet; const OutputPath, TemplatePath: string);
+procedure TGenerator.GenerateIDAOObjects;
 var
-  i: Integer;
-  tableName, tableClassName, usesList, tableClassExtName, tableClassVarName,
-  typeName, fieldName, fieldMemberName, sqlType, delphiType, asType: string;
-  s, s2, s3, s4: string;
-  pk, queryByDef, deleteByDef: string;
-  pks: array of string;
-  template: TTemplate;
+  asType: string;
+  deleteByDef: string;
+  delphiType: string;
   ds: TClientDataSet;
-  hasPK: Boolean;
-  guid: TGUID;
-  isNullable: Boolean;
+  fieldMemberName: string;
   fieldMemberNames: TStringList;
+  fieldName: string;
+  hasPK: Boolean;
+  i: Integer;
+  isNullable: Boolean;
+  pk: string;
+  pkCount: Integer;
+  queryByDef: string;
+  sqlType: string;
+  tableClassBase: string;
+  tableDAOName: string;
+  tableDTOExtName: string;
+  tableDTOName: string;
+  tableDTOVariableName: string;
+  tableName: string;
+  template: TTemplate;
+  typeName: string;
+  usesList: string;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (AClientDataSet) do
+  with (FTablesDataSet) do
   begin
     First;
     while (not Eof) do
     begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
-      tableClassName := TInflector.Classify(tableName);
-      tableClassExtName := tableClassName + 'Ext';
-      tableClassVarName := 'A' + tableClassExtName;
-      Write('Generating ' + '"' + OutputPath + '\class\dao\' + tableClassName + 'DAO.pas"...');
+      tableClassBase := TInflector.Classify(tableName);
+      tableDAOName := tableClassBase + 'DAO';
+      tableDTOName := tableClassBase + 'DTO';
+      tableDTOExtName := tableDTOName + 'Ext';
+      tableDTOVariableName := 'A' + tableDTOExtName;
+      Write('Generating ' + '"' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
       ds := GetFields(tableName);
       pk := '';
-      SetLength(pks, 0);
       queryByDef := '';
       deleteByDef := '';
       fieldMemberNames := TStringList.Create;
+      pkCount := 0;
       with (ds) do
       while (not Eof) do
       begin
@@ -705,8 +736,7 @@ begin
         if (FieldByName('Key').AsString = 'PRI') then
         begin
           pk := fieldName;
-          SetLength(pks, Length(pks) + 1);
-          pks[Length(pks) - 1] := fieldName;
+          Inc(pkCount);
         end
         else
         begin
@@ -720,59 +750,36 @@ begin
       ds.Free;
       if (hasPK) then
       begin
-        if (Length(pks) = 1) then
-          template := TTemplate.Create(TemplatePath + '\IDAO.tpl')
+        if (pkCount = 1) then
+          template := TTemplate.Create(FTemplatePath + '\IDAO.tpl')
         else
-          template := TTemplate.Create(TemplatePath + '\IDAOComplexPK.tpl');
+          WriteLn(' skipped (no support for composite primary keys).');
       end
       else
-        template := TTemplate.Create(TemplatePath + '\IDAOView.tpl');
-      template.SetPair('dao_class_name', 'T' + tableClassExtName);
-      template.SetPair('table_name', tableName);
-      template.SetPair('var_name', tableClassVarName);
-      if (hasPK) then
+        template := TTemplate.Create(FTemplatePath + '\IDAOView.tpl');
+      if (Assigned(template)) then
       begin
-        template.SetPair('pk', pk);
-        s := '';
-        s2 := '';
-        s3 := '';
-        s4 := '';
-        for i := 0 to High(pks) do
+        template.SetPair('dao_class_name', 'T' + tableDTOExtName);
+        template.SetPair('table_name', tableName);
+        template.SetPair('param_name', tableDTOVariableName);
+        if (hasPK) then
         begin
-          if (i > 0) then
-          begin
-            s := s + ', ';
-            s2 := s2 + ' AND ';
-            s3 := s3 + TAB2;
-          end;
-          s := s + '$' + TInflector.Memberify(pks[i]);
-          s2 := s2 + pks[i] + ' = ?';
-          s3 := s3 + '$sqlQuery->setNumber($' + TInflector.Memberify(pks[i]) + ');';
-          s3 := s3 + CRLF;
-          s4 := s4 + CRLF + TAB2;
-          s4 := s4 + '$sqlQuery->setNumber($' + tableClassExtName + '->' + TInflector.Memberify(pks[i]) + ');';
-          s4 := s4 + CRLF;
+          template.SetPair('pk', pk);
+          deleteByDef := LeftStr(deleteByDef, Length(deleteByDef) - 2);
+          template.SetPair('delete_by_definitions', deleteByDef);
         end;
-        template.SetPair('pk_set_update', s4);
-        template.SetPair('pk_set', s3);
-        template.SetPair('pk_where', s2);
-        template.SetPair('pks', s);
-        deleteByDef := LeftStr(deleteByDef, Length(deleteByDef) - 2);
-        template.SetPair('delete_by_definitions', deleteByDef);
+        usesList := TAB + tableDTOExtName + ',';
+        typeName := 'I' + tableDAOName;
+        template.SetPair('unit_name', tableDAOName);
+        template.SetPair('uses_list', usesList);
+        template.SetPair('type_name', typeName);
+        template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
+        queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
+        template.SetPair('query_by_definitions', queryByDef);
+        template.Write('' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas');
+        template.Free;
+        WriteLn(' done.');
       end;
-      CreateGuid(guid);
-      usesList := TAB + tableClassExtName + ',';
-      typeName := 'I' + tableClassName + 'DAO';
-      template.SetPair('unit_name', tableClassName);
-      template.SetPair('uses_list', usesList);
-      template.SetPair('type_name', typeName);
-      template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-//      template.SetPair('guid', GUIDToString(guid));
-      queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
-      template.SetPair('query_by_definitions', queryByDef);
-      template.Write('' + OutputPath + '\class\dao\' + tableClassName + 'DAO.pas');
-      template.Free;
-      WriteLn(' done.');
       Next;
     end;
   end;
@@ -784,23 +791,29 @@ end;
 {**
  * Create procedures and functions to access MySQL stored routines
  * (note: this requires that the user is the owner of the routine, or have SELECT access to the mysql.proc table)
- * @param Path file output path
  *}
-class procedure TGenerator.GenerateStoredRoutines(const OutputPath, TemplatePath: string);
+procedure TGenerator.GenerateStoredRoutines;
 var
-  routineName, delphiRoutineName, createSQL, funcParams, sqlParams, comment,
-  sqlReturnType, delphiReturnType,
-  functionDeclarations, implementationCode: string;
-  paramRecs: TList<TRoutineParameter>;
-  paramRec : TRoutineParameter;
-  template: TTemplate;
-  qry: TTBGQuery;
+  comment: string;
+  createSQL: string;
+  delphiReturnType: string;
+  delphiRoutineName: string;
   ds: TClientDataSet;
+  functionParams: string;
+  functionDeclarations: string;
+  implementationCode: string;
+  paramRec : TRoutineParameter;
+  paramRecs: TList<TRoutineParameter>;
+  qry: TTBGQuery;
+  routineName: string;
+  sqlParams: string;
+  sqlReturnType: string;
+  template: TTemplate;
 begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  Write('Generating ' + '"' + OutputPath + '\class\StoredRoutines.pas"...');
+  Write('Generating ' + '"' + FOutputPath + CLASSES_PATH + '\StoredRoutines.pas"...');
   qry := TTBGQuery.Create;
   qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + TConnectionProperty.GetDatabase + '"');
   ds := TQueryExecutor.Execute(qry);
@@ -819,19 +832,19 @@ begin
       createSQL := TQueryExecutor.QueryForString(qry, 'Create Procedure');
       qry.Free;
       paramRecs := GetRoutineParameters(createSQL, False);
-      funcParams := '';
+      functionParams := '';
       sqlParams := '';
       for paramRec in paramRecs do
       begin
-        funcParams := funcParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + '; ';
+        functionParams := functionParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + '; ';
         sqlParams := sqlParams + ':' + paramRec.VarName + ', ';
       end;
-      if (funcParams <> '') then
+      if (functionParams <> '') then
       begin
-        funcParams := Copy(funcParams, 1, Length(funcParams) - 2);
+        functionParams := Copy(functionParams, 1, Length(functionParams) - 2);
         sqlParams := Copy(sqlParams, 1, Length(sqlParams) - 2);
       end;
-      functionDeclarations := functionDeclarations + TAB2 + 'class procedure ' + delphiRoutineName + '(' + funcParams + ');' + CRLF;
+      functionDeclarations := functionDeclarations + TAB2 + 'class procedure ' + delphiRoutineName + '(' + functionParams + ');' + CRLF;
       implementationCode := implementationCode + '{**' + CRLF;
       if (comment <> '') then
       begin
@@ -840,7 +853,7 @@ begin
       end;
       implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
       implementationCode := implementationCode + '*}' + CRLF;
-      implementationCode := implementationCode + 'class procedure TStoredRoutines.' + delphiRoutineName + '(' + funcParams + ');' + CRLF;
+      implementationCode := implementationCode + 'class procedure TStoredRoutines.' + delphiRoutineName + '(' + functionParams + ');' + CRLF;
       implementationCode := implementationCode + 'var' + CRLF;
       implementationCode := implementationCode + TAB + 'ds: TClientDataSet;' + CRLF;
       implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
@@ -877,21 +890,21 @@ begin
       createSQL := TQueryExecutor.QueryForString(qry, 'Create Function');
       qry.Free;
       paramRecs := GetRoutineParameters(createSQL, True);
-      funcParams := '';
+      functionParams := '';
       sqlParams := '';
       for paramRec in paramRecs do
       begin
-        funcParams := funcParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + '; ';
+        functionParams := functionParams + 'const ' + TInflector.Memberify(paramRec.VarName) + ': ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + '; ';
         sqlParams := sqlParams + ':' + paramRec.VarName + ', ';
       end;
-      if (funcParams <> '') then
+      if (functionParams <> '') then
       begin
-        funcParams := Copy(funcParams, 1, Length(funcParams) - 2);
+        functionParams := Copy(functionParams, 1, Length(functionParams) - 2);
         sqlParams := Copy(sqlParams, 1, Length(sqlParams) - 2);
       end;
       sqlReturnType := GetRoutineReturnType(createSQL);
       delphiReturnType := TDelphinator.MySQLTypeToDelphiType(sqlReturnType, False);
-      functionDeclarations := functionDeclarations + TAB2 + 'class function ' + delphiRoutineName + '(' + funcParams + '): ' + delphiReturnType + ';' + CRLF;
+      functionDeclarations := functionDeclarations + TAB2 + 'class function ' + delphiRoutineName + '(' + functionParams + '): ' + delphiReturnType + ';' + CRLF;
       implementationCode := implementationCode + '{**' + CRLF;
       if (comment <> '') then
       begin
@@ -901,7 +914,7 @@ begin
       implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
       implementationCode := implementationCode + ' * @return ' + delphiReturnType + CRLF;
       implementationCode := implementationCode + '*}' + CRLF;
-      implementationCode := implementationCode + 'class function TStoredRoutines.' + delphiRoutineName + '(' + funcParams + '): ' + delphiReturnType + ';' + CRLF;
+      implementationCode := implementationCode + 'class function TStoredRoutines.' + delphiRoutineName + '(' + functionParams + '): ' + delphiReturnType + ';' + CRLF;
       implementationCode := implementationCode + 'var' + CRLF;
       implementationCode := implementationCode + TAB + 'ds: TClientDataSet;' + CRLF;
       implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
@@ -921,11 +934,11 @@ begin
     end;
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
     implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(TemplatePath + '\StoredRoutines.tpl');
+    template := TTemplate.Create(FTemplatePath + '\StoredRoutines.tpl');
+    template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
     template.SetPair('function_declarations', functionDeclarations);
     template.SetPair('implementation_code', implementationCode);
-    template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
-    template.Write('' + OutputPath + '\class\StoredRoutines.pas');
+    template.Write('' + FOutputPath + CLASSES_PATH + '\StoredRoutines.pas');
     template.Free;
     WriteLn(' done.');
   end;
@@ -935,7 +948,7 @@ begin
 {$ENDIF}
 end;
 
-class function TGenerator.GetFields(const TableName: string): TClientDataSet;
+function TGenerator.GetFields(const TableName: string): TClientDataSet;
 var
   qry: TTBGQuery;
 begin
@@ -945,7 +958,7 @@ begin
   qry.Free;
 end;
 
-class function TGenerator.GetIndices(const TableName: string): TStringList;
+function TGenerator.GetIndices(const TableName: string): TStringList;
 var
   ds: TClientDataSet;
   indices: TStringList;
@@ -962,7 +975,7 @@ begin
   Result := indices;
 end;
 
-class function TGenerator.GetRoutineParameters(const CreateSQL: string; const IsFunction: Boolean): TList<TRoutineParameter>;
+function TGenerator.GetRoutineParameters(const CreateSQL: string; const IsFunction: Boolean): TList<TRoutineParameter>;
 var
   i: Integer;
   paramsStr: string;
@@ -1003,7 +1016,7 @@ begin
   Result := paramList;
 end;
 
-class function TGenerator.GetRoutineReturnType(const CreateSQL: string): string;
+function TGenerator.GetRoutineReturnType(const CreateSQL: string): string;
 var
   returnTypeStr: string;
 begin
@@ -1013,6 +1026,36 @@ begin
   returnTypeStr := StringReplace(returnTypeStr, #9, '', [rfReplaceAll]);
   returnTypeStr := StringReplace(returnTypeStr, #$A, '', [rfReplaceAll]);
   Result := returnTypeStr;
+end;
+
+procedure TGenerator.Initialize;
+begin
+	CreateDir(FOutputPath);
+	CreateDir(FOutputPath + CLASSES_PATH);
+	CreateDir(FOutputPath + CORE_PATH);
+	CreateDir(FOutputPath + DAO_PATH);
+  CreateDir(FOutputPath + DAO_EXT_PATH);
+	CreateDir(FOutputPath + DTO_PATH);
+	CreateDir(FOutputPath + DTO_EXT_PATH);
+	CreateDir(FOutputPath + SQL_PATH);
+  CreateDir(FOutputPath + INTERFACES_PATH);
+  CreateDir(FOutputPath + IDAO_PATH);
+// need to compare files, so cannot blanket delete
+//	CleanDirectory(FOutputPath + DAO_PATH);
+//  CleanDirectory(FOutputPath + DTO_PATH);
+//	CleanDirectory(FOutputPath + IDAO_PATH);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\core\ArrayList.pas'), PChar(FOutputPath + CORE_PATH + '\ArrayList.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\Connection.pas'), PChar(FOutputPath + SQL_PATH + '\Connection.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\ConnectionFactory.pas'), PChar(FOutputPath + SQL_PATH + '\ConnectionFactory.pas'), False);
+  // do not overwrite connection properties if they already exist
+  if (not FileExists(FOutputPath + '\classes\sql\ConnectionProperty.pas')) then
+    CopyFile(PChar(FTemplatePath + '\ConnectionProperty.tpl'), PChar(FOutputPath + SQL_PATH + '\ConnectionProperty.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\Query.pas'), PChar(FOutputPath + SQL_PATH + '\Query.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\QueryExecutor.pas'), PChar(FOutputPath + SQL_PATH + '\QueryExecutor.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\QueryFactory.pas'), PChar(FOutputPath + SQL_PATH + '\QueryFactory.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + '\SQLComparisonOperator.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + '\SQLOrderDirection.pas'), False);
+  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\Transaction.pas'), PChar(FOutputPath + SQL_PATH + '\Transaction.pas'), False);
 end;
 
 end.
