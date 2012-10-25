@@ -447,7 +447,7 @@ begin
           template := TTemplate.Create(FTemplatePath + '\DAO.tpl')
 {$ENDIF}
         else
-          WriteLn(' skipped (no support for composite primary keys).');
+          WriteLn(' skipped (no support for complex primary keys).');
       end
       else
 {$IFDEF GenerateInterfaces}
@@ -753,7 +753,7 @@ begin
         if (pkCount = 1) then
           template := TTemplate.Create(FTemplatePath + '\IDAO.tpl')
         else
-          WriteLn(' skipped (no support for composite primary keys).');
+          WriteLn(' skipped (no support for complex primary keys).');
       end
       else
         template := TTemplate.Create(FTemplatePath + '\IDAOView.tpl');
@@ -1038,8 +1038,10 @@ begin
 	CreateDir(FOutputPath + DTO_PATH);
 	CreateDir(FOutputPath + DTO_EXT_PATH);
 	CreateDir(FOutputPath + SQL_PATH);
+{$IFDEF GenerateInterfaces}
   CreateDir(FOutputPath + INTERFACES_PATH);
   CreateDir(FOutputPath + IDAO_PATH);
+{$ENDIF}
 // need to compare files, so cannot blanket delete
 //	CleanDirectory(FOutputPath + DAO_PATH);
 //  CleanDirectory(FOutputPath + DTO_PATH);
