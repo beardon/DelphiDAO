@@ -267,7 +267,7 @@ begin
         usesList := TAB + tableDAOName + ';';
         template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAOExt.tpl', NO_UPDATE_FILES);
         template.SetPair('table_name', tableName);
-        template.SetPair('unit_name', tableBaseClass);
+        template.SetPair('unit_name', tableDAOExtName);
         template.SetPair('uses_list', usesList);
         typeName := 'T' + tableDAOExtName;
         ancestorTypeName := 'T' + tableDAOName;
@@ -526,7 +526,7 @@ begin
       template.SetPair('query_by_functions', queryByFunc);
       template.SetPair('read_row', readRow);
       template.SetPair('type_name', typeName);
-      template.SetPair('unit_name', tableClassBase);
+      template.SetPair('unit_name', tableDAOName);
       template.SetPair('uses_list', usesList);
       template.Write('' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas');
       template.Free;
@@ -576,7 +576,7 @@ begin
         template.SetPair('pointer_type_name', pointerTypeName);
         template.SetPair('table_name', tableName);
         template.SetPair('type_name', typeName);
-        template.SetPair('unit_name', tableDTOName);
+        template.SetPair('unit_name', tableDTOExtName);
         template.SetPair('uses_list', usesList);
         template.Write('' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas');
         template.Free;
@@ -704,6 +704,7 @@ var
   tableDTOExtName: string;
   tableDTOName: string;
   tableDTOVariableName: string;
+  tableIDAOName: string;
   tableName: string;
   template: TTemplate;
   typeName: string;
@@ -720,10 +721,11 @@ begin
       tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDAOName := tableClassBase + 'DAO';
+      tableIDAOName := tableDAOName + 'Interfaced';
       tableDTOName := tableClassBase + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
       tableDTOVariableName := 'A' + tableDTOExtName;
-      Write('Generating ' + '"' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas"...');
+      Write('Generating ' + '"' + FOutputPath + DAO_PATH + '\' + tableIDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
       ds := GetFields(tableName);
       pk := '';
@@ -784,13 +786,13 @@ begin
         end;
         usesList := TAB + tableDTOExtName + ',';
         typeName := 'I' + tableDAOName;
-        template.SetPair('unit_name', tableDAOName);
+        template.SetPair('unit_name', tableIDAOName);
         template.SetPair('uses_list', usesList);
         template.SetPair('type_name', typeName);
         template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
         queryByDef := LeftStr(queryByDef, Length(queryByDef) - 2);
         template.SetPair('query_by_definitions', queryByDef);
-        template.Write('' + FOutputPath + DAO_PATH + '\' + tableDAOName + '.pas');
+        template.Write('' + FOutputPath + DAO_PATH + '\' + tableIDAOName + '.pas');
         template.Free;
         WriteLn(' done.');
       end;

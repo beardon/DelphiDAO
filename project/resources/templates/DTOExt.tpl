@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}Ext;
+unit ${unit_name};
 
 interface
 

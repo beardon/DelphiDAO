@@ -1,5 +1,5 @@
 { $Id$ }
-unit ${unit_name}MySQLExtDAO;
+unit ${unit_name};
 
 interface
 
