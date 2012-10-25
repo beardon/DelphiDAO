@@ -99,13 +99,15 @@ end;
 
 function TGenerator.CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
 var
-  code, appendedDefault: string;
-  fieldMemberName, tableClassName: string;
+  appendedDefault: string;
+  code: string;
+  fieldMemberName: string;
+  tableBaseClass: string;
 begin
-  tableClassName := TInflector.Classify(TableName);
+  tableBaseClass := TInflector.Classify(TableName);
   fieldMemberName := TInflector.Memberify(FieldName);
   appendedDefault := '';
-  code := 'function T' + tableClassName + 'MySQLDAO.DeleteBy' + fieldMemberName + '(const Value: ' + DelphiType + '): Integer;' + CRLF;
+  code := 'function T' + tableBaseClass + 'MySQLDAO.DeleteBy' + fieldMemberName + '(const Value: ' + DelphiType + '): Integer;' + CRLF;
   code := code + 'var' + CRLF;
   code := code + TAB + 'qry: TTBGQuery;' + CRLF;
   code := code + 'begin' + CRLF;
@@ -120,12 +122,17 @@ end;
 
 function TGenerator.CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
 var
-  code, pkIndexConstant: string;
-  appendedComparisonOperatorDefault, appendedOrderClauseDefault, appendedOrderIndexDefault, appendedOrderDirectionDefault: string;
-  tableClassName, tableClassExtName: string;
+  appendedComparisonOperatorDefault: string;
+  appendedOrderClauseDefault: string;
+  appendedOrderDirectionDefault: string;
+  appendedOrderIndexDefault: string;
+  code: string;
+  pkIndexConstant: string;
+  tableBaseClass: string;
+  tableDTOExtName: string;
 begin
-  tableClassName := TInflector.Classify(TableName);
-  tableClassExtName := tableClassName + 'Ext';
+  tableBaseClass := TInflector.Classify(TableName);
+  tableDTOExtName := tableBaseClass + 'DTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
   appendedComparisonOperatorDefault := '';
   appendedOrderClauseDefault := '';
@@ -138,25 +145,28 @@ begin
     appendedOrderIndexDefault := ' = ' + pkIndexConstant;
     appendedOrderDirectionDefault := ' = TSQLOrderDirection.ASCENDING';
   end;
-  code := TAB2 + 'function QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '): TObjectList<T' + tableClassExtName + '>;' + CRLF;
-  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderClause: string' + appendedOrderClauseDefault + '): TObjectList<T' + tableClassExtName + '>;' + CRLF;
-  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderIndex: Integer' + appendedOrderIndexDefault + '; OrderDirection: Integer' + appendedOrderDirectionDefault + '): TObjectList<T' + tableClassExtName + '>;' + CRLF;
+  code := TAB2 + 'function QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderClause: string' + appendedOrderClauseDefault + '): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderIndex: Integer' + appendedOrderIndexDefault + '; OrderDirection: Integer' + appendedOrderDirectionDefault + '): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   Result := code;
 end;
 
 function TGenerator.CreateQueryByFunctions(const TableName, FieldName, FieldMemberName, DelphiType, PrimaryKeyIndex: string): string;
 var
-  code, params, pkIndexConstant: string;
-  tableClassName, tableClassExtName: string;
+  code: string;
+  params: string;
+  pkIndexConstant: string;
+  tableBaseClass: string;
+  tableDTOExtName: string;
 begin
-  tableClassName := TInflector.Classify(TableName);
-  tableClassExtName := tableClassName + 'Ext';
+  tableBaseClass := TInflector.Classify(TableName);
+  tableDTOExtName := tableBaseClass + 'DTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
-  code := 'function T' + tableClassName + 'MySQLDAO.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): TObjectList<T' + tableClassExtName + '>;' + CRLF;
+  code := 'function T' + tableBaseClass + 'MySQLDAO.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'Result := QueryBy' + FieldMemberName + 'OrderByIndex(Value, ComparisonOperator, ' + pkIndexConstant + ', TSQLOrderDirection.ASCENDING);' + CRLF;
   code := code + 'end;' + CRLF2;
-  code := code + 'function T' + tableClassName + 'MySQLDAO.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): TObjectList<T' + tableClassExtName + '>;' + CRLF;
+  code := code + 'function T' + tableBaseClass + 'MySQLDAO.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'var' + CRLF;
   code := code + TAB + 'qry: TTBGQuery;' + CRLF;
   code := code + 'begin' + CRLF;
@@ -177,7 +187,7 @@ begin
   code := code + TAB + 'Result := getList(qry);' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
   code := code + 'end;' + CRLF2;
-  code := code + 'function T' + tableClassName + 'MySQLDAO.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): TObjectList<T' + tableClassExtName + '>;' + CRLF;
+  code := code + 'function T' + tableBaseClass + 'MySQLDAO.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'Result := QueryBy' + FieldMemberName + 'OrderBy(Value, ComparisonOperator, INDEX_FIELD_MAP[OrderIndex] + '' '' + TSQLOrderDirection.INDEX_DIRECTION_MAP[OrderDirection]);' + CRLF;
   code := code + 'end;' + CRLF2;
