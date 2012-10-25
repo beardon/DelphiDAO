@@ -20,7 +20,7 @@ type
   private
     FOutputPath: string;
     FTablesDataSet: TClientDataSet;
-    FTemplatePath: string;
+    FSourceProjectPath: string;
     procedure CleanDirectory(Path: string);
     function CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
     function CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
@@ -40,7 +40,7 @@ type
     function GetRoutineReturnType(const CreateSQL: string): string;
     procedure Initialize;
   public
-    procedure Generate(OutputPath, TemplatePath: string);
+    procedure Generate(OutputPath: string; SourceProjectPath: string);
   end;
 
 implementation
@@ -67,6 +67,10 @@ const
   DTO_EXT_PATH = DTO_PATH + '\ext';
   IDAO_PATH = INTERFACES_PATH + '\dao';
   SQL_PATH = CLASSES_PATH + '\sql';
+  SOURCE_CLASSES_PATH = '\lib\com\beardon\delphidao\classes';
+  SOURCE_CLASSES_CORE_PATH = SOURCE_CLASSES_PATH + '\dao\core';
+  SOURCE_CLASSES_SQL_PATH = SOURCE_CLASSES_PATH + '\dao\sql';
+  SOURCE_TEMPLATES_PATH = '\resources\templates';
   CRLF = #13#10;
   CRLF2 = CRLF + CRLF;
   TAB = '  ';
@@ -201,12 +205,12 @@ begin
   Result := success;
 end;
 
-procedure TGenerator.Generate(OutputPath, TemplatePath: string);
+procedure TGenerator.Generate(OutputPath: string; SourceProjectPath: string);
 var
   qry: TTBGQuery;
 begin
   FOutputPath := OutputPath;
-  FTemplatePath := TemplatePath;
+  FSourceProjectPath := SourceProjectPath;
   Initialize;
   qry := TTBGQuery.Create;
   qry.SQL.Add('SHOW TABLES');
@@ -251,7 +255,7 @@ begin
       begin
         Write('Generating ' + '"' + FOutputPath + DAO_EXT_PATH + '\' + tableDAOExtName + '.pas"...');
         usesList := TAB + tableDAOName + ';';
-        template := TTemplate.Create(FTemplatePath + '\DAOExt.tpl', NO_UPDATE_FILES);
+        template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAOExt.tpl', NO_UPDATE_FILES);
         template.SetPair('table_name', tableName);
         template.SetPair('unit_name', tableBaseClass);
         template.SetPair('uses_list', usesList);
@@ -312,7 +316,7 @@ begin
     usesList := LeftStr(usesList, Length(usesList) - 3) + ';';
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
     implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(FTemplatePath + '\DAOFactory.tpl');
+    template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAOFactory.tpl');
     template.SetPair('uses_list', usesList);
     template.SetPair('function_declarations', functionDeclarations);
     template.SetPair('implementation_code', implementationCode);
@@ -442,18 +446,18 @@ begin
       begin
         if (pkCount = 1) then
 {$IFDEF GenerateInterfaces}
-          template := TTemplate.Create(FTemplatePath + '\DAOInterfaced.tpl')
+          template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAOInterfaced.tpl')
 {$ELSE}
-          template := TTemplate.Create(FTemplatePath + '\DAO.tpl')
+          template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAO.tpl')
 {$ENDIF}
         else
           WriteLn(' skipped (no support for complex primary keys).');
       end
       else
 {$IFDEF GenerateInterfaces}
-        template := TTemplate.Create(FTemplatePath + '\DAOViewInterfaced.tpl');
+        template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAOViewInterfaced.tpl');
 {$ELSE}
-        template := TTemplate.Create(FTemplatePath + '\DAOView.tpl');
+        template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DAOView.tpl');
 {$ENDIF}
       indexConstants := '';
       if (indices.Count > 0) then
@@ -556,7 +560,7 @@ begin
       if (not FileExists('' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas')) then
       begin
         Write('Generating ' + '"' + FOutputPath + DTO_EXT_PATH + '\' + tableDTOExtName + '.pas"...');
-        template := TTemplate.Create(FTemplatePath + '\DTOExt.tpl', NO_UPDATE_FILES);
+        template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DTOExt.tpl', NO_UPDATE_FILES);
         template.SetPair('ancestor_type_name', ancestorTypeName);
         template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
         template.SetPair('pointer_type_name', pointerTypeName);
@@ -614,7 +618,7 @@ begin
       tableBaseClass := TInflector.Classify(tableName);
       tableDTOName := tableBaseClass + 'DTO';
       Write('Generating ' + '"' + FOutputPath + DTO_PATH + '\' + tableDTOName + '.pas"...');
-      template := TTemplate.Create(FTemplatePath + '\DTO.tpl');
+      template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\DTO.tpl');
       template.SetPair('table_name', tableName);
       template.SetPair('unit_name', tableDTOName);
       typeName := 'T' + tableDTOName;
@@ -751,12 +755,12 @@ begin
       if (hasPK) then
       begin
         if (pkCount = 1) then
-          template := TTemplate.Create(FTemplatePath + '\IDAO.tpl')
+          template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\IDAO.tpl')
         else
           WriteLn(' skipped (no support for complex primary keys).');
       end
       else
-        template := TTemplate.Create(FTemplatePath + '\IDAOView.tpl');
+        template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\IDAOView.tpl');
       if (Assigned(template)) then
       begin
         template.SetPair('dao_class_name', 'T' + tableDTOExtName);
@@ -934,7 +938,7 @@ begin
     end;
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
     implementationCode := LeftStr(implementationCode, Length(implementationCode) - 2);
-    template := TTemplate.Create(FTemplatePath + '\StoredRoutines.tpl');
+    template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\StoredRoutines.tpl');
     template.SetPair('date', FormatDateTime('yyyy-mm-dd hh:nn', Now));
     template.SetPair('function_declarations', functionDeclarations);
     template.SetPair('implementation_code', implementationCode);
@@ -1046,18 +1050,18 @@ begin
 //	CleanDirectory(FOutputPath + DAO_PATH);
 //  CleanDirectory(FOutputPath + DTO_PATH);
 //	CleanDirectory(FOutputPath + IDAO_PATH);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\core\ArrayList.pas'), PChar(FOutputPath + CORE_PATH + '\ArrayList.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\Connection.pas'), PChar(FOutputPath + SQL_PATH + '\Connection.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\ConnectionFactory.pas'), PChar(FOutputPath + SQL_PATH + '\ConnectionFactory.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_CORE_PATH + '\ArrayList.pas'), PChar(FOutputPath + CORE_PATH + '\ArrayList.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\Connection.pas'), PChar(FOutputPath + SQL_PATH + '\Connection.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\ConnectionFactory.pas'), PChar(FOutputPath + SQL_PATH + '\ConnectionFactory.pas'), False);
   // do not overwrite connection properties if they already exist
-  if (not FileExists(FOutputPath + '\classes\sql\ConnectionProperty.pas')) then
-    CopyFile(PChar(FTemplatePath + '\ConnectionProperty.tpl'), PChar(FOutputPath + SQL_PATH + '\ConnectionProperty.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\Query.pas'), PChar(FOutputPath + SQL_PATH + '\Query.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\QueryExecutor.pas'), PChar(FOutputPath + SQL_PATH + '\QueryExecutor.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\QueryFactory.pas'), PChar(FOutputPath + SQL_PATH + '\QueryFactory.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + '\SQLComparisonOperator.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + '\SQLOrderDirection.pas'), False);
-  CopyFile(PChar(FTemplatePath + '\classes\dao\sql\Transaction.pas'), PChar(FOutputPath + SQL_PATH + '\Transaction.pas'), False);
+  if (not FileExists(FOutputPath + SQL_PATH + '\ConnectionProperty.pas')) then
+    CopyFile(PChar(FSourceProjectPath + SOURCE_TEMPLATES_PATH + '\ConnectionProperty.tpl'), PChar(FOutputPath + SQL_PATH + '\ConnectionProperty.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\Query.pas'), PChar(FOutputPath + SQL_PATH + '\Query.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\QueryExecutor.pas'), PChar(FOutputPath + SQL_PATH + '\QueryExecutor.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\QueryFactory.pas'), PChar(FOutputPath + SQL_PATH + '\QueryFactory.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + '\SQLComparisonOperator.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + '\SQLOrderDirection.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + '\Transaction.pas'), PChar(FOutputPath + SQL_PATH + '\Transaction.pas'), False);
 end;
 
 end.
