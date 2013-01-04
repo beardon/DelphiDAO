@@ -4,7 +4,7 @@
 			<MainSource>DelphiDAO.dpr</MainSource>
 			<ProjectVersion>12.3</ProjectVersion>
 			<Base>True</Base>
-			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Config Condition="'$(Config)'==''">Release</Config>
 			<Platform>Win32</Platform>
 			<AppType>Application</AppType>
 			<FrameworkType>VCL</FrameworkType>
@@ -26,9 +26,9 @@
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_Define>CONSOLE;$(DCC_Define)</DCC_Define>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DcuOutput>..\dcu\DelphiXE\build\</DCC_DcuOutput>
+			<DCC_DcuOutput>..\dcu\DelphiDAO\DelphiXE\build\</DCC_DcuOutput>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
-			<DCC_ExeOutput>..\output\DelphiXE\build\</DCC_ExeOutput>
+			<DCC_ExeOutput>..\output\DelphiDAO\DelphiXE\build\</DCC_ExeOutput>
 			<DCC_E>false</DCC_E>
 			<DCC_N>false</DCC_N>
 			<DCC_S>false</DCC_S>
@@ -36,8 +36,8 @@
 			<DCC_K>false</DCC_K>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_DcuOutput>..\dcu\DelphiXE\debug\</DCC_DcuOutput>
-			<DCC_ExeOutput>..\output\DelphiXE\debug\</DCC_ExeOutput>
+			<DCC_DcuOutput>..\dcu\DelphiDAO\DelphiXE\debug\</DCC_DcuOutput>
+			<DCC_ExeOutput>..\output\DelphiDAO\DelphiXE\debug\</DCC_ExeOutput>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
