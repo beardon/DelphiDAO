@@ -15,7 +15,9 @@ type
 implementation
 
 uses
-  ConnectionProperty;
+  ConnectionProperty,
+  DB,
+  MyDataTypeMap;
 
 class procedure TConnectionFactory.Close(var Connection: TMyConnection);
 begin
@@ -35,6 +37,7 @@ begin
     Database := TConnectionProperty.GetDatabase;
     Port := TConnectionProperty.GetPort;
     Server := TConnectionProperty.GetHost;
+    DataTypeMap.AddDBTypeRule(myIntUnsigned, ftLargeint); // MyDAC data mapping workaround
     ConnectionTimeout := 60;
     Connect;
   end;
