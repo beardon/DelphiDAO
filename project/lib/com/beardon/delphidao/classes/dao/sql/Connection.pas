@@ -6,7 +6,7 @@ uses
   Classes,
   DB,
   MyAccess,
-  query;
+  Query;
 
 type
   TConnection = class

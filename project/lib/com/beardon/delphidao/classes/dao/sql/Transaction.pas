@@ -4,18 +4,18 @@ interface
 
 uses
   ArrayList,
-  Connection;
+  ConnectionExt;
 
 type
   TTransaction = class
   private
-    class var FConnection: TConnection;
+    class var FConnection: TConnectionExt;
     FTransactions: TArrayList;
   public
     constructor Create;
     procedure Commit;
     procedure Rollback;
-    function GetConnection: TConnection;
+    function GetConnection: TConnectionExt;
     class function GetCurrentTransaction: TTransaction; static;
   end;
 
@@ -28,7 +28,7 @@ constructor TTransaction.Create;
 var
   qry: TTBGQuery;
 begin
-  FConnection := TConnection.Create;
+  FConnection := TConnectionExt.Create;
   if (TTransaction.FTransactions = nil) then
   begin
     TTransaction.FTransactions := TArrayList.Create;
@@ -64,7 +64,7 @@ begin
   TTransaction.FTransactions.RemoveLast;
 end;
 
-function TTransaction.GetConnection: TConnection;
+function TTransaction.GetConnection: TConnectionExt;
 begin
   Result := FConnection;
 end;

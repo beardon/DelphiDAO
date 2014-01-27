@@ -10,7 +10,7 @@ type
     const PORT: Integer = 3306;
     const USER: string = 'developer';
     const PASSWORD: string = '';
-    const DATABASE: string = 'schema';
+    const DATABASE: string = 'database';
   public
     class function GetHost: string; static;
     class function GetPort: Integer; static;

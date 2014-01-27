@@ -67,9 +67,11 @@ const
   DTO_EXT_PATH = DTO_PATH + 'ext\';
   IDAO_PATH = INTERFACES_PATH + 'dao\';
   SQL_PATH = CLASSES_PATH + 'sql\';
+  SQL_EXT_PATH = SQL_PATH + 'ext\';
   SOURCE_CLASSES_PATH = 'lib\com\beardon\delphidao\classes\';
   SOURCE_CLASSES_CORE_PATH = SOURCE_CLASSES_PATH + 'dao\core\';
   SOURCE_CLASSES_SQL_PATH = SOURCE_CLASSES_PATH + 'dao\sql\';
+  SOURCE_CLASSES_SQL_EXT_PATH = SOURCE_CLASSES_SQL_PATH + 'ext\';
   SOURCE_TEMPLATES_PATH = 'resources\templates\';
   CRLF = #13#10;
   CRLF2 = CRLF + CRLF;
@@ -1066,10 +1068,6 @@ begin
   CreateDir(FOutputPath + INTERFACES_PATH);
   CreateDir(FOutputPath + IDAO_PATH);
 {$ENDIF}
-// need to compare files, so cannot blanket delete
-//	CleanDirectory(FOutputPath + DAO_PATH);
-//  CleanDirectory(FOutputPath + DTO_PATH);
-//	CleanDirectory(FOutputPath + IDAO_PATH);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_CORE_PATH + 'ArrayList.pas'), PChar(FOutputPath + CORE_PATH + 'ArrayList.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'Connection.pas'), PChar(FOutputPath + SQL_PATH + 'Connection.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'ConnectionFactory.pas'), PChar(FOutputPath + SQL_PATH + 'ConnectionFactory.pas'), False);
@@ -1082,6 +1080,9 @@ begin
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + 'SQLComparisonOperator.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + 'SQLOrderDirection.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'Transaction.pas'), PChar(FOutputPath + SQL_PATH + 'Transaction.pas'), False);
+  // do not overwrite connection extension if it already exists
+  if (not FileExists(FOutputPath + SQL_EXT_PATH + 'ConnectionExt.pas')) then
+    CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_EXT_PATH + 'ConnectionExt.pas'), PChar(FOutputPath + SQL_EXT_PATH + 'ConnectionExt.pas'), False);
 end;
 
 end.

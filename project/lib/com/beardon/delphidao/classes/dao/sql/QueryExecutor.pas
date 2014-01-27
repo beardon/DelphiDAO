@@ -3,7 +3,7 @@ unit QueryExecutor;
 interface
 
 uses
-  Connection,
+  ConnectionExt,
   DB,
   DBClient,
   Query;
@@ -12,15 +12,15 @@ type
   TQueryExecutor = class
   public
     class function Execute(var Query: TTBGQuery): TClientDataSet; overload; static;
-    class function Execute(var Query: TTBGQuery; const Connection: TConnection): TClientDataSet; overload; static;
+    class function Execute(var Query: TTBGQuery; const Connection: TConnectionExt): TClientDataSet; overload; static;
     class function ExecuteUpdate(var Query: TTBGQuery): Integer; overload; static;
-    class function ExecuteUpdate(var Query: TTBGQuery; const Connection: TConnection): Integer; overload; static;
+    class function ExecuteUpdate(var Query: TTBGQuery; const Connection: TConnectionExt): Integer; overload; static;
     class function ExecuteInsert(var Query: TTBGQuery): Int64; overload; static;
-    class function ExecuteInsert(var Query: TTBGQuery; const Connection: TConnection): Int64; overload; static;
+    class function ExecuteInsert(var Query: TTBGQuery; const Connection: TConnectionExt): Int64; overload; static;
     class function QueryForString(var Query: TTBGQuery): string; overload; static;
-    class function QueryForString(var Query: TTBGQuery; const Connection: TConnection): string; overload; static;
+    class function QueryForString(var Query: TTBGQuery; const Connection: TConnectionExt): string; overload; static;
     class function QueryForString(var Query: TTBGQuery; const FieldName: string): string; overload; static;
-    class function QueryForString(var Query: TTBGQuery; const FieldName: string; const Connection: TConnection): string; overload; static;
+    class function QueryForString(var Query: TTBGQuery; const FieldName: string; const Connection: TConnectionExt): string; overload; static;
   end;
 
 implementation
@@ -31,12 +31,12 @@ uses
 
 class function TQueryExecutor.Execute(var Query: TTBGQuery): TClientDataSet;
 var
-  connection: TConnection;
+  connection: TConnectionExt;
   transaction: TTransaction;
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-    connection := TConnection.Create
+    connection := TConnectionExt.Create
   else
     connection := transaction.GetConnection;
   Result := Execute(Query, connection);
@@ -47,7 +47,7 @@ begin
   end;
 end;
 
-class function TQueryExecutor.Execute(var Query: TTBGQuery; const Connection: TConnection): TClientDataSet;
+class function TQueryExecutor.Execute(var Query: TTBGQuery; const Connection: TConnectionExt): TClientDataSet;
 var
   dataset: TClientDataSet;
   dsp: TDataSetProvider;
@@ -63,12 +63,12 @@ end;
 
 class function TQueryExecutor.ExecuteUpdate(var Query: TTBGQuery): Integer;
 var
-  connection: TConnection;
+  connection: TConnectionExt;
   transaction: TTransaction;
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-    connection := TConnection.Create
+    connection := TConnectionExt.Create
   else
     connection := transaction.GetConnection;
   Result := ExecuteUpdate(Query, connection);
@@ -79,7 +79,7 @@ begin
   end;
 end;
 
-class function TQueryExecutor.ExecuteUpdate(var Query: TTBGQuery; const Connection: TConnection): Integer;
+class function TQueryExecutor.ExecuteUpdate(var Query: TTBGQuery; const Connection: TConnectionExt): Integer;
 var
   dataset: TDataSet;
 begin
@@ -90,12 +90,12 @@ end;
 
 class function TQueryExecutor.ExecuteInsert(var Query: TTBGQuery): Int64;
 var
-  connection: TConnection;
+  connection: TConnectionExt;
   transaction: TTransaction;
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-    connection := TConnection.Create
+    connection := TConnectionExt.Create
   else
     connection := transaction.GetConnection;
   Result := ExecuteInsert(Query, connection);
@@ -106,7 +106,7 @@ begin
   end;
 end;
 
-class function TQueryExecutor.ExecuteInsert(var Query: TTBGQuery; const Connection: TConnection): Int64;
+class function TQueryExecutor.ExecuteInsert(var Query: TTBGQuery; const Connection: TConnectionExt): Int64;
 var
   dataset: TDataSet;
 begin
@@ -117,12 +117,12 @@ end;
 
 class function TQueryExecutor.QueryForString(var Query: TTBGQuery): string;
 var
-  connection: TConnection;
+  connection: TConnectionExt;
   transaction: TTransaction;
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-    connection := TConnection.Create
+    connection := TConnectionExt.Create
   else
     connection := transaction.GetConnection;
   Result := QueryForString(Query, connection);
@@ -133,7 +133,7 @@ begin
   end;
 end;
 
-class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const Connection: TConnection): string;
+class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const Connection: TConnectionExt): string;
 var
   dataset: TDataSet;
 begin
@@ -144,12 +144,12 @@ end;
 
 class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const FieldName: string): string;
 var
-  connection: TConnection;
+  connection: TConnectionExt;
   transaction: TTransaction;
 begin
   transaction := TTransaction.GetCurrentTransaction;
   if (transaction = nil) then
-    connection := TConnection.Create
+    connection := TConnectionExt.Create
   else
     connection := transaction.GetConnection;
   Result := QueryForString(Query, FieldName, connection);
@@ -160,7 +160,7 @@ begin
   end;
 end;
 
-class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const FieldName: string; const Connection: TConnection): string;
+class function TQueryExecutor.QueryForString(var Query: TTBGQuery; const FieldName: string; const Connection: TConnectionExt): string;
 var
   dataset: TDataSet;
 begin

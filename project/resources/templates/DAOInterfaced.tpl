@@ -5,7 +5,7 @@ interface
 
 uses
 ${uses_list}
-  Connection,
+  ConnectionExt,
   DB,
   DBClient,
   Generics.Collections,
@@ -24,7 +24,7 @@ type
   ${type_name} = class(TInterfacedObject, ${interface_name})
   private
     const INDEX_FIELD_MAP: ${mapping_array};
-    var FConnection: TConnection;
+    var FConnection: TConnectionExt;
   protected
     function ReadRow(const AClientDataset: TClientDataSet): ${dao_class_name}; 
     function GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
@@ -35,7 +35,7 @@ type
     function ExecuteInsert(var AQuery: TTBGQuery): Integer;	
   public
 ${index_constants}
-    constructor Create(AConnection: TConnection);
+    constructor Create(AConnection: TConnectionExt);
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
@@ -49,7 +49,7 @@ ${delete_by_definitions}
 
 implementation
 
-constructor ${type_name}.Create(AConnection: TConnection);
+constructor ${type_name}.Create(AConnection: TConnectionExt);
 begin
   FConnection := AConnection;
 end;

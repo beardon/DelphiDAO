@@ -4,7 +4,7 @@ unit DAOFactory;
 interface
 
 uses
-  Connection,
+  ConnectionExt,
 ${uses_list}
 
 type
@@ -14,7 +14,7 @@ type
    *}
   TDAOFactory = class
   private
-    class var FConnection: TConnection;
+    class var FConnection: TConnectionExt;
   public
     class constructor Create;
     class destructor Destroy;
@@ -25,7 +25,7 @@ implementation
 
 class constructor TDAOFactory.Create;
 begin
-  FConnection := TConnection.Create;
+  FConnection := TConnectionExt.Create;
 end;
 
 class destructor TDAOFactory.Destroy;

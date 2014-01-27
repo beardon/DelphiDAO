@@ -68,6 +68,7 @@
 			<DCCReference Include="lib\com\beardon\delphidao\classes\dao\sql\SQLOrderDirection.pas"/>
 			<DCCReference Include="lib\com\beardon\delphidao\classes\dao\sql\Transaction.pas"/>
 			<DCCReference Include="lib\com\beardon\delphidao\libraries\HashLib.pas"/>
+			<DCCReference Include="lib\com\beardon\delphidao\classes\dao\sql\ext\ConnectionExt.pas"/>
 			<None Include="Defines.inc"/>
 			<None Include="resources\templates\ConnectionProperty.tpl"/>
 			<None Include="resources\templates\DAO.tpl"/>

@@ -21,7 +21,8 @@ uses
   SQLComparisonOperator in 'lib\com\beardon\delphidao\classes\dao\sql\SQLComparisonOperator.pas',
   SQLOrderDirection in 'lib\com\beardon\delphidao\classes\dao\sql\SQLOrderDirection.pas',
   Transaction in 'lib\com\beardon\delphidao\classes\dao\sql\Transaction.pas',
-  HashLib in 'lib\com\beardon\delphidao\libraries\HashLib.pas';
+  HashLib in 'lib\com\beardon\delphidao\libraries\HashLib.pas',
+  ConnectionExt in 'lib\com\beardon\delphidao\classes\dao\sql\ext\ConnectionExt.pas';
 
 var
   generator: TGenerator;
