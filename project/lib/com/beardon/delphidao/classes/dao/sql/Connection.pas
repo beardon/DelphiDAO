@@ -11,13 +11,14 @@ uses
 type
   TConnection = class
   private
-    FConnection: TMyConnection;
     FAffectedRows: Integer;
     FInsertId: Int64;
+  protected
+    FConnection: TMyConnection;
   public
-    constructor Create;
+    constructor Create; virtual;
     procedure Close;
-    function ExecuteQuery(var Query: TTBGQuery): TDataSet;
+    function ExecuteQuery(var Query: TTBGQuery): TDataSet; virtual;
     property Connection: TMyConnection read FConnection;
     property AffectedRows: Integer read FAffectedRows;
     property InsertId: Int64 read FInsertId;
