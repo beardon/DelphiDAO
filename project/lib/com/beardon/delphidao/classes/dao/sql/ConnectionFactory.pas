@@ -27,7 +27,6 @@ end;
 
 class function TConnectionFactory.GetConnection: TMyConnection;
 var
-  connection: TMyConnection;
   db: string;
   host: string;
   password: string;
