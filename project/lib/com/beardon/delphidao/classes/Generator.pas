@@ -1074,7 +1074,7 @@ begin
 {$ENDIF}
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_CORE_PATH + 'ArrayList.pas'), PChar(FOutputPath + CORE_PATH + 'ArrayList.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_PATH + 'Configuration.pas'), PChar(FOutputPath + CLASSES_PATH + 'Configuration.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'ConnectionProperty.tpl'), PChar(FOutputPath + SQL_PATH + 'ConnectionProperty.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'ConnectionProperty.pas'), PChar(FOutputPath + SQL_PATH + 'ConnectionProperty.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + 'SQLComparisonOperator.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + 'SQLOrderDirection.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'TbgQuery.pas'), PChar(FOutputPath + SQL_PATH + 'TbgQuery.pas'), False);
