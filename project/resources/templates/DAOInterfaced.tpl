@@ -39,6 +39,9 @@ ${delete_by_definitions}
 
 implementation
 
+uses
+  Data.DB;
+
 {**
  * Get Domain object by primary key
  *
