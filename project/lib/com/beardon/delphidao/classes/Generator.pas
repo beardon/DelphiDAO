@@ -847,7 +847,7 @@ begin
   Write('Generating ' + '"' + FOutputPath + CLASSES_PATH + 'StoredRoutines.pas"...');
   qry := TTbgQuery.Create(nil);
   qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + TConnectionPropertyExt.GetDatabase + '"');
-  qry.Free;
+  qry.Execute;
   with (qry) do
   if (not IsEmpty) then
   begin
@@ -905,7 +905,7 @@ begin
   qry.Free;
   qry := TTbgQuery.Create(nil);
   qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + TConnectionPropertyExt.GetDatabase + '"');
-  qry.Free;
+  qry.Execute;
   with (qry) do
   if (not IsEmpty) then
   begin
