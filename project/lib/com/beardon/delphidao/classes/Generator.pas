@@ -49,7 +49,7 @@ type
 implementation
 
 uses
-  ConnectionPropertyExt,
+  Configuration,
   DB,
   Delphinator,
   Inflector,
@@ -68,11 +68,9 @@ const
   DTO_EXT_PATH = DTO_PATH + 'ext\';
   IDAO_PATH = INTERFACES_PATH + 'dao\';
   SQL_PATH = CLASSES_PATH + 'sql\';
-  SQL_EXT_PATH = SQL_PATH + 'ext\';
   SOURCE_CLASSES_PATH = 'lib\com\beardon\delphidao\classes\';
   SOURCE_CLASSES_CORE_PATH = SOURCE_CLASSES_PATH + 'dao\core\';
   SOURCE_CLASSES_SQL_PATH = SOURCE_CLASSES_PATH + 'dao\sql\';
-  SOURCE_CLASSES_SQL_EXT_PATH = SOURCE_CLASSES_SQL_PATH + 'ext\';
   SOURCE_TEMPLATES_PATH = 'resources\templates\';
   CRLF = #13#10;
   CRLF2 = CRLF + CRLF;
@@ -262,7 +260,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
@@ -316,7 +314,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
@@ -394,7 +392,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDAOName := tableClassBase + 'DAO';
       tableDAOInterfaceName := 'I' + tableDAOName;
@@ -570,7 +568,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDTOName := tableClassBase + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
@@ -635,7 +633,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDTOName := tableBaseClass + 'DTO';
       Write('Generating ' + '"' + FOutputPath + DTO_PATH + tableDTOName + '.pas"...');
@@ -730,7 +728,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDAOName := tableClassBase + 'DAO';
       tableIDAOName := tableDAOName + 'Interfaced';
@@ -846,7 +844,7 @@ begin
 {$ENDIF}
   Write('Generating ' + '"' + FOutputPath + CLASSES_PATH + 'StoredRoutines.pas"...');
   qry := TTbgQuery.Create(nil);
-  qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + TConnectionPropertyExt.GetDatabase + '"');
+  qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + DB_SCHEMA + '"');
   qry.Execute;
   with (qry) do
   if (not IsEmpty) then
@@ -904,7 +902,7 @@ begin
   end;
   qry.Free;
   qry := TTbgQuery.Create(nil);
-  qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + TConnectionPropertyExt.GetDatabase + '"');
+  qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + DB_SCHEMA + '"');
   qry.Execute;
   with (qry) do
   if (not IsEmpty) then
@@ -1067,20 +1065,15 @@ begin
 	CreateDir(FOutputPath + DTO_PATH);
 	CreateDir(FOutputPath + DTO_EXT_PATH);
 	CreateDir(FOutputPath + SQL_PATH);
-	CreateDir(FOutputPath + SQL_EXT_PATH);
 {$IFDEF GenerateInterfaces}
   CreateDir(FOutputPath + INTERFACES_PATH);
   CreateDir(FOutputPath + IDAO_PATH);
 {$ENDIF}
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_CORE_PATH + 'ArrayList.pas'), PChar(FOutputPath + CORE_PATH + 'ArrayList.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_PATH + 'Configuration.pas'), PChar(FOutputPath + CLASSES_PATH + 'Configuration.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'ConnectionProperty.pas'), PChar(FOutputPath + SQL_PATH + 'ConnectionProperty.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + 'SQLComparisonOperator.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + 'SQLOrderDirection.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'TbgQuery.pas'), PChar(FOutputPath + SQL_PATH + 'TbgQuery.pas'), False);
-  // do not overwrite connection property extension if it already exists
-  if (not FileExists(FOutputPath + SQL_EXT_PATH + 'ConnectionPropertyExt.pas')) then
-    CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_EXT_PATH + 'ConnectionPropertyExt.pas'), PChar(FOutputPath + SQL_EXT_PATH + 'ConnectionPropertyExt.pas'), False);
 end;
 
 end.

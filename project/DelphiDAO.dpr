@@ -17,9 +17,7 @@ uses
   HashLib in 'lib\com\beardon\delphidao\libraries\HashLib.pas',
   TbgQuery in 'lib\com\beardon\delphidao\classes\dao\sql\TbgQuery.pas',
   DatabaseDM in 'lib\com\beardon\delphidao\data_modules\DatabaseDM.pas' {DatabaseDataModule: TDataModule},
-  Configuration in 'lib\com\beardon\delphidao\Configuration.pas',
-  ConnectionProperty in 'lib\com\beardon\delphidao\classes\dao\sql\ConnectionProperty.pas',
-  ConnectionPropertyExt in 'lib\com\beardon\delphidao\classes\dao\sql\ext\ConnectionPropertyExt.pas';
+  Configuration in 'lib\com\beardon\delphidao\Configuration.pas';
 
 var
   generator: TGenerator;

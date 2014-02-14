@@ -26,7 +26,7 @@ var
 implementation
 
 uses
-  ConnectionPropertyExt,
+  Configuration,
   MyDataTypeMap;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -60,11 +60,11 @@ begin
   with (DBConnection) do
   begin
     LoginPrompt := False;
-    Server := TConnectionPropertyExt.GetHost;
-    Port := TConnectionPropertyExt.GetPort;
-    Username := TConnectionPropertyExt.GetUser;
-    Password := TConnectionPropertyExt.GetPassword;
-    Database := TConnectionPropertyExt.GetDatabase;
+    Server := DB_HOST;
+    Port := DB_PORT;
+    Username := DB_USERNAME;
+    Password := DB_PASSWORD;
+    Database := DB_SCHEMA;
     Connect;
     DataTypeMap.AddDBTypeRule(myIntUnsigned, ftLargeint); // MyDAC data mapping workaround
   end;

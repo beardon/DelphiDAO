@@ -104,8 +104,6 @@
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="lib\com\beardon\delphidao\Configuration.pas"/>
-        <DCCReference Include="lib\com\beardon\delphidao\classes\dao\sql\ConnectionProperty.pas"/>
-        <DCCReference Include="lib\com\beardon\delphidao\classes\dao\sql\ext\ConnectionPropertyExt.pas"/>
         <None Include="Defines.inc"/>
         <None Include="resources\templates\DAO.tpl"/>
         <None Include="resources\templates\DAOExt.tpl"/>
