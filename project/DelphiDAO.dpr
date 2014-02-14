@@ -26,7 +26,7 @@ var
 
 procedure ProcessParameters;
 const
-  DEFAULT_PROJECT_PATH = '..\..\..\project\';
+  DEFAULT_PROJECT_PATH = '..\..\..\..\project\';
   OUTPUT_PATH_PARAM = '-o';
   TEMPLATE_PATH_PARAM = '-t';
 var
