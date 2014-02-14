@@ -120,7 +120,7 @@ begin
   code := code + TAB + 'qry.SQL.Add(''DELETE FROM ' + TableName + ' WHERE ' + FieldName + ' = :' + fieldMemberName + ''');' + CRLF;
   code := code + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := Value;' + CRLF;
   code := code + TAB + 'qry.Execute;' + CRLF;
-  code := code + TAB + 'Result := qry.AffectedRows;' + CRLF;
+  code := code + TAB + 'Result := qry.RowsAffected;' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
   code := code + 'end;' + CRLF2;
   Result := code;

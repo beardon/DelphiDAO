@@ -96,7 +96,7 @@ begin
   qry.SQL.Add('DELETE FROM ${table_name} WHERE ${pk} = :${pk}');
   qry.ParamByName('${pk}').Value := ${pk};
   qry.Execute;
-  Result := qry.AffectedRows;
+  Result := qry.RowsAffected;
   qry.Free;
 end;
 	
@@ -139,7 +139,7 @@ begin
 ${parameter_setter}
   qry.ParamByName('${pk_with_s}').Value := ${var_name}.${pk_with_s};
   qry.Execute;
-  Result := qry.AffectedRows;
+  Result := qry.RowsAffected;
   qry.Free;
 end;
 
@@ -153,7 +153,7 @@ begin
   qry := TTbgQuery.Create(nil);
   qry.SQL.Add('DELETE FROM ${table_name}');
   qry.Execute;
-  Result := qry.AffectedRows;
+  Result := qry.RowsAffected;
   qry.Free;
 end;
 
