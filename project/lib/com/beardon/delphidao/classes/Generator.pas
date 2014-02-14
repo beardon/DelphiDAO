@@ -416,7 +416,7 @@ begin
       queryByFunc := '';
       updateFields := '';
       parameterSetter := CRLF;
-      readRow := '';
+      readRow := CRLF;
       pkCount := 0;
       fieldMemberNames := TStringList.Create;
       with (qry) do
@@ -532,7 +532,6 @@ begin
       template.SetPair('mapping_array', mappingArray);
       template.SetPair('query_by_definitions', queryByDef);
       template.SetPair('query_by_functions', queryByFunc);
-      readRow := LeftStr(readRow, Length(readRow) - 2);
       template.SetPair('read_row', readRow);
       template.SetPair('type_name', typeName);
       template.SetPair('unit_name', tableDAOName);
