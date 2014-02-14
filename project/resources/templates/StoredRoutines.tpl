@@ -3,11 +3,6 @@ unit StoredRoutines;
 
 interface
 
-uses
-  DBClient,
-  Query,
-  QueryExecutor;
-
 type
   {**
    * Stored Routines
@@ -17,8 +12,11 @@ type
   public
 ${function_declarations}
   end;
-  
+
 implementation
+
+uses
+  TbgQuery;
 
 ${implementation_code}
 

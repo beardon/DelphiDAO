@@ -12,17 +12,14 @@ uses
   Generator in 'lib\com\beardon\delphidao\classes\Generator.pas',
   Template in 'lib\com\beardon\delphidao\classes\Template.pas',
   ArrayList in 'lib\com\beardon\delphidao\classes\dao\core\ArrayList.pas',
-  Connection in 'lib\com\beardon\delphidao\classes\dao\sql\Connection.pas',
-  ConnectionFactory in 'lib\com\beardon\delphidao\classes\dao\sql\ConnectionFactory.pas',
-  ConnectionProperty in 'lib\com\beardon\delphidao\classes\dao\sql\ConnectionProperty.pas',
-  Query in 'lib\com\beardon\delphidao\classes\dao\sql\Query.pas',
-  QueryExecutor in 'lib\com\beardon\delphidao\classes\dao\sql\QueryExecutor.pas',
-  QueryFactory in 'lib\com\beardon\delphidao\classes\dao\sql\QueryFactory.pas',
   SQLComparisonOperator in 'lib\com\beardon\delphidao\classes\dao\sql\SQLComparisonOperator.pas',
   SQLOrderDirection in 'lib\com\beardon\delphidao\classes\dao\sql\SQLOrderDirection.pas',
-  Transaction in 'lib\com\beardon\delphidao\classes\dao\sql\Transaction.pas',
   HashLib in 'lib\com\beardon\delphidao\libraries\HashLib.pas',
-  ConnectionExt in 'lib\com\beardon\delphidao\classes\dao\sql\ext\ConnectionExt.pas';
+  TbgQuery in 'lib\com\beardon\delphidao\classes\dao\sql\TbgQuery.pas',
+  DatabaseDM in 'lib\com\beardon\delphidao\data_modules\DatabaseDM.pas' {DatabaseDataModule: TDataModule},
+  Configuration in 'lib\com\beardon\delphidao\Configuration.pas',
+  ConnectionProperty in 'lib\com\beardon\delphidao\classes\dao\sql\ConnectionProperty.pas',
+  ConnectionPropertyExt in 'lib\com\beardon\delphidao\classes\dao\sql\ext\ConnectionPropertyExt.pas';
 
 var
   generator: TGenerator;

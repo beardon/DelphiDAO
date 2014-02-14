@@ -7,7 +7,8 @@ uses
   Classes,
   DBClient,
   Generics.Collections,
-  HashLib;
+  HashLib,
+  TbgQuery;
 
 type
   TRoutineParameter = record
@@ -19,7 +20,7 @@ type
   TGenerator = class(TObject)
   private
     FOutputPath: string;
-    FTablesDataSet: TClientDataSet;
+    FTablesQuery: TTbgQuery;
     FSourceProjectPath: string;
     procedure CleanDirectory(Path: string);
     function CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
@@ -32,9 +33,11 @@ type
     procedure GenerateDAOObjects;
     procedure GenerateDTOExtObjects;
     procedure GenerateDTOObjects;
+{$IFDEF GenerateInterfaces}
     procedure GenerateIDAOObjects;
+{$ENDIF}
     procedure GenerateStoredRoutines;
-    function GetFields(const TableName: string): TClientDataSet;
+    function GetFields(const TableName: string): TTbgQuery;
     function GetIndices(const TableName: string): TStringList;
     function GetRoutineParameters(const CreateSQL: string; const IsFunction: Boolean): TList<TRoutineParameter>;
     function GetRoutineReturnType(const CreateSQL: string): string;
@@ -46,12 +49,10 @@ type
 implementation
 
 uses
-  ConnectionProperty,
+  ConnectionPropertyExt,
   DB,
   Delphinator,
   Inflector,
-  Query,
-  QueryExecutor,
   StrUtils,
   SysUtils,
   Template,
@@ -113,12 +114,13 @@ begin
   appendedDefault := '';
   code := 'function T' + tableDAOName + '.DeleteBy' + fieldMemberName + '(const Value: ' + DelphiType + '): Integer;' + CRLF;
   code := code + 'var' + CRLF;
-  code := code + TAB + 'qry: TTBGQuery;' + CRLF;
+  code := code + TAB + 'qry: TTbgQuery;' + CRLF;
   code := code + 'begin' + CRLF;
-  code := code + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+  code := code + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
   code := code + TAB + 'qry.SQL.Add(''DELETE FROM ' + TableName + ' WHERE ' + FieldName + ' = :' + fieldMemberName + ''');' + CRLF;
   code := code + TAB + 'qry.ParamByName(''' + fieldMemberName + ''').Value := Value;' + CRLF;
-  code := code + TAB + 'Result := ExecuteUpdate(qry);' + CRLF;
+  code := code + TAB + 'qry.Execute;' + CRLF;
+  code := code + TAB + 'Result := qry.AffectedRows;' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
   code := code + 'end;' + CRLF2;
   Result := code;
@@ -174,9 +176,9 @@ begin
   code := code + 'end;' + CRLF2;
   code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
   code := code + 'var' + CRLF;
-  code := code + TAB + 'qry: TTBGQuery;' + CRLF;
+  code := code + TAB + 'qry: TTbgQuery;' + CRLF;
   code := code + 'begin' + CRLF;
-  code := code + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+  code := code + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
   code := code + TAB + 'qry.SQL.Add(''SELECT * FROM ' + TableName + ''');' + CRLF;
   code := code + TAB + 'qry.SQL.Add(''WHERE ' + FieldName + ' '' + TSQLComparisonOperator.INDEX_OPERATOR_MAP[ComparisonOperator] + '' :' + FieldMemberName + ''');' + CRLF;
   code := code + TAB + 'if (OrderClause <> '''') then' + CRLF;
@@ -190,7 +192,7 @@ begin
     params := params + TAB2 + 'qry.ParamByName(''' + FieldMemberName + ''').Value := Value;' + CRLF;
   end;
   code := code + params;
-  code := code + TAB + 'Result := getList(qry);' + CRLF;
+  code := code + TAB + 'Result := GetList(qry);' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
   code := code + 'end;' + CRLF2;
   code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
@@ -202,36 +204,33 @@ end;
 
 function TGenerator.DoesTableContainPK(const TableName: string): Boolean;
 var
-  ds: TClientDataSet;
+  qry: TTbgQuery;
   success: Boolean;
 begin
   success := False;
-	ds := GetFields(TableName);
-  with (ds) do
+	qry := GetFields(TableName);
+  with (qry) do
   while (not Eof) do
   begin
-    if (ds.FieldByName('Key').AsString = 'PRI') then
+    if (qry.FieldByName('Key').AsString = 'PRI') then
     begin
       success := True;
       Break;
     end;
     Next;
   end;
-  ds.Free;
+  qry.Free;
   Result := success;
 end;
 
 procedure TGenerator.Generate(OutputPath: string; SourceProjectPath: string);
-var
-  qry: TTBGQuery;
 begin
   FOutputPath := OutputPath;
   FSourceProjectPath := SourceProjectPath;
   Initialize;
-  qry := TTBGQuery.Create;
-  qry.SQL.Add('SHOW TABLES');
-  FTablesDataSet := TQueryExecutor.Execute(qry);
-  qry.Free;
+  FTablesQuery := TTbgQuery.Create(nil);
+  FTablesQuery.SQL.Add('SHOW TABLES');
+  FTablesQuery.Execute;
   GenerateDTOObjects;
   GenerateDTOExtObjects;
 	GenerateDAOObjects;
@@ -241,7 +240,7 @@ begin
 {$ENDIF}
 	GenerateDAOFactory;
   GenerateStoredRoutines;
-  FTablesDataSet.Free;
+  FTablesQuery.Free;
 end;
 
 procedure TGenerator.GenerateDAOExtObjects;
@@ -258,12 +257,12 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesDataSet) do
+  with (FTablesQuery) do
   begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
@@ -312,12 +311,12 @@ begin
   AllocConsole;
 {$ENDIF}
   Write('Generating ' + '"' + FOutputPath + DAO_PATH + 'DAOFactory.pas"...');
-  with (FTablesDataSet) do
+  with (FTablesQuery) do
   begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
@@ -354,7 +353,6 @@ var
   deleteByDef: string;
   deleteByFunc: string;
   delphiType: string;
-  ds: TClientDataSet;
   fieldMemberName: string;
   fieldMemberNames: TStringList;
   fieldName: string;
@@ -371,6 +369,7 @@ var
   parameterSetter: string;
   pk: string;
   pkCount: Integer;
+  qry: TTbgQuery;
   queryByDef: string;
   queryByFunc: string;
   readRow: string;
@@ -390,12 +389,12 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesDataSet) do
+  with (FTablesQuery) do
   begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDAOName := tableClassBase + 'DAO';
       tableDAOInterfaceName := 'I' + tableDAOName;
@@ -404,12 +403,12 @@ begin
       tableDTOVariableName := 'A' + tableDTOName;
       Write('Generating ' + '"' + FOutputPath + DAO_PATH + tableDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
-      ds := GetFields(tableName);
+      qry := GetFields(tableName);
       indices := GetIndices(tableName);
       if (indices.Count > 0) then
         firstIndex := indices[0]
       else
-        firstIndex := ds.FieldByName('Field').AsString;
+        firstIndex := qry.FieldByName('Field').AsString;
       deleteByDef := '';
       deleteByFunc := '';
       insertFields := '';
@@ -419,10 +418,10 @@ begin
       queryByFunc := '';
       updateFields := '';
       parameterSetter := CRLF;
-      readRow := CRLF;
+      readRow := '';
       pkCount := 0;
       fieldMemberNames := TStringList.Create;
-      with (ds) do
+      with (qry) do
       while (not Eof) do
       begin
         fieldName := FieldByName('Field').AsString;
@@ -457,11 +456,12 @@ begin
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldMemberName, delphiType, True, firstIndex);
           queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, fieldMemberName, delphiType, firstIndex);
         end;
-        readRow := readRow + TAB2 + tableDTOVariableName + '.' + fieldMemberName + ' := AClientDataset.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
+        readRow := readRow + TAB2 + tableDTOVariableName + '.' + fieldMemberName + ' := AQuery.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
       end;
       fieldMemberNames.Free;
-      ds.Free;
+      qry.Free;
+      template := nil;
       if (hasPK) then
       begin
         if (pkCount = 1) then
@@ -534,6 +534,7 @@ begin
       template.SetPair('mapping_array', mappingArray);
       template.SetPair('query_by_definitions', queryByDef);
       template.SetPair('query_by_functions', queryByFunc);
+      readRow := LeftStr(readRow, Length(readRow) - 1);
       template.SetPair('read_row', readRow);
       template.SetPair('type_name', typeName);
       template.SetPair('unit_name', tableDAOName);
@@ -564,12 +565,12 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesDataSet) do
+  with (FTablesQuery) do
   begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDTOName := tableClassBase + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
@@ -608,7 +609,6 @@ procedure TGenerator.GenerateDTOObjects;
 var
   assignAssignments: string;
   delphiType: string;
-  ds: TClientDataSet;
   fieldMemberName: string;
   fieldMemberNames: TStringList;
   fieldName: string;
@@ -618,6 +618,7 @@ var
   publicConstants: string;
   publicProperties: string;
   protectedVars: string;
+  qry: TTbgQuery;
   sqlType: string;
   tableBaseClass: string;
   tableDTOName: string;
@@ -629,12 +630,12 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesDataSet) do
+  with (FTablesQuery) do
   begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + TConnectionProperty.GetDatabase).AsString;
+      tableName := FieldByName('Tables_in_' + TConnectionPropertyExt.GetDatabase).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDTOName := tableBaseClass + 'DTO';
       Write('Generating ' + '"' + FOutputPath + DTO_PATH + tableDTOName + '.pas"...');
@@ -652,11 +653,11 @@ begin
       assignAssignments := '';
       protectedVars := '';
       publicProperties := '';
-      ds := GetFields(tableName);
+      qry := GetFields(tableName);
       fieldMemberNames := TStringList.Create;
-      while (not ds.Eof) do
+      while (not qry.Eof) do
       begin
-        fieldName := ds.FieldByName('Field').AsString;
+        fieldName := qry.FieldByName('Field').AsString;
         i := 1;
         fieldMemberName := TInflector.Memberify(fieldName);
         while (fieldMemberNames.IndexOf(fieldMemberName) > -1) do
@@ -665,16 +666,16 @@ begin
           fieldMemberName := TInflector.Memberify(fieldName) + IntToStr(i);
         end;
         fieldMemberNames.Add(fieldMemberName);
-        isNullable := (ds.FieldByName('Null').AsString = 'YES');
-        sqlType := ds.FieldByName('Type').AsString;
+        isNullable := (qry.FieldByName('Null').AsString = 'YES');
+        sqlType := qry.FieldByName('Type').AsString;
         delphiType := TDelphinator.MySQLTypeToDelphiType(sqlType, isNullable);
         protectedVars := protectedVars + TAB2 + 'F' + fieldMemberName + ': ' + delphiType + '; //' + sqlType + CRLF;
         publicProperties := publicProperties + TAB2 + 'property ' + fieldMemberName + ': ' + delphiType + ' read F' + fieldMemberName + ' write F' + fieldMemberName + ';' + CRLF;
         assignAssignments := assignAssignments + TAB2 + fieldMemberName + ' := ' + typeName + '(' + tableDTOVariableName + ').' + fieldMemberName + ';' + CRLF;
-        ds.Next;
+        qry.Next;
       end;
       fieldMemberNames.Free;
-      ds.Free;
+      qry.Free;
       protectedVars := LeftStr(protectedVars, Length(protectedVars) - 2);
       publicProperties := LeftStr(publicProperties, Length(publicProperties) - 2);
       assignAssignments := LeftStr(assignAssignments, Length(assignAssignments) - 2);
@@ -693,12 +694,12 @@ begin
 {$ENDIF}
 end;
 
+{$IFDEF GenerateInterfaces}
 procedure TGenerator.GenerateIDAOObjects;
 var
   asType: string;
   deleteByDef: string;
   delphiType: string;
-  ds: TClientDataSet;
   fieldMemberName: string;
   fieldMemberNames: TStringList;
   fieldName: string;
@@ -707,6 +708,7 @@ var
   isNullable: Boolean;
   pk: string;
   pkCount: Integer;
+  qry: TTbgQuery;
   queryByDef: string;
   sqlType: string;
   tableClassBase: string;
@@ -723,7 +725,7 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesDataSet) do
+  with (FTablesQuery) do
   begin
     First;
     while (not Eof) do
@@ -737,13 +739,13 @@ begin
       tableDTOVariableName := 'A' + tableDTOExtName;
       Write('Generating ' + '"' + FOutputPath + IDAO_PATH + tableIDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
-      ds := GetFields(tableName);
+      qry := GetFields(tableName);
       pk := '';
       queryByDef := '';
       deleteByDef := '';
       fieldMemberNames := TStringList.Create;
       pkCount := 0;
-      with (ds) do
+      with (qry) do
       while (not Eof) do
       begin
         fieldName := FieldByName('Field').AsString;
@@ -773,13 +775,16 @@ begin
         Next;
       end;
       fieldMemberNames.Free;
-      ds.Free;
+      qry.Free;
       if (hasPK) then
       begin
         if (pkCount = 1) then
           template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'IDAO.tpl')
         else
+        begin
+          template := nil;
           WriteLn(' skipped.');
+        end;
       end
       else
         template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'IDAOView.tpl');
@@ -813,6 +818,7 @@ begin
   FreeConsole;
 {$ENDIF}
 end;
+{$ENDIF}
 
 {**
  * Create procedures and functions to access MySQL stored routines
@@ -824,13 +830,12 @@ var
   createSQL: string;
   delphiReturnType: string;
   delphiRoutineName: string;
-  ds: TClientDataSet;
   functionParams: string;
   functionDeclarations: string;
   implementationCode: string;
   paramRec : TRoutineParameter;
   paramRecs: TList<TRoutineParameter>;
-  qry: TTBGQuery;
+  qry, qry2: TTbgQuery;
   routineName: string;
   sqlParams: string;
   sqlReturnType: string;
@@ -840,11 +845,10 @@ begin
   AllocConsole;
 {$ENDIF}
   Write('Generating ' + '"' + FOutputPath + CLASSES_PATH + 'StoredRoutines.pas"...');
-  qry := TTBGQuery.Create;
-  qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + TConnectionProperty.GetDatabase + '"');
-  ds := TQueryExecutor.Execute(qry);
+  qry := TTbgQuery.Create(nil);
+  qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + TConnectionPropertyExt.GetDatabase + '"');
   qry.Free;
-  with (ds) do
+  with (qry) do
   if (not IsEmpty) then
   begin
     First;
@@ -853,10 +857,11 @@ begin
       routineName := FieldByName('Name').AsString;
       delphiRoutineName := TInflector.Memberify(routineName);
       comment := FieldByName('Comment').AsString;
-      qry := TTBGQuery.Create;
-      qry.SQL.Add('SHOW CREATE PROCEDURE ' + routineName);
-      createSQL := TQueryExecutor.QueryForString(qry, 'Create Procedure');
-      qry.Free;
+      qry2 := TTbgQuery.Create(nil);
+      qry2.SQL.Add('SHOW CREATE PROCEDURE ' + routineName);
+      qry2.Execute;
+      createSQL := qry2.FieldByName('Create Procedure').AsString;
+      qry2.Free;
       paramRecs := GetRoutineParameters(createSQL, False);
       functionParams := '';
       sqlParams := '';
@@ -881,17 +886,15 @@ begin
       implementationCode := implementationCode + '*}' + CRLF;
       implementationCode := implementationCode + 'class procedure TStoredRoutines.' + delphiRoutineName + '(' + functionParams + ');' + CRLF;
       implementationCode := implementationCode + 'var' + CRLF;
-      implementationCode := implementationCode + TAB + 'ds: TClientDataSet;' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry: TTbgQuery;' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.SQL.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
       for paramRec in paramRecs do
       begin
         implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
       end;
-      implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.Execute(qry);' + CRLF;
-      implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.Execute;' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
@@ -899,11 +902,11 @@ begin
       Next;
     end;
   end;
-  qry := TTBGQuery.Create;
-  qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + TConnectionProperty.GetDatabase + '"');
-  ds := TQueryExecutor.Execute(qry);
   qry.Free;
-  with (ds) do
+  qry := TTbgQuery.Create(nil);
+  qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + TConnectionPropertyExt.GetDatabase + '"');
+  qry.Free;
+  with (qry) do
   if (not IsEmpty) then
   begin
     First;
@@ -911,10 +914,11 @@ begin
     begin
       routineName := FieldByName('Name').AsString;
       delphiRoutineName := TInflector.Memberify(routineName);
-      qry := TTBGQuery.Create;
-      qry.SQL.Add('SHOW CREATE FUNCTION ' + routineName);
-      createSQL := TQueryExecutor.QueryForString(qry, 'Create Function');
-      qry.Free;
+      qry2 := TTbgQuery.Create(nil);
+      qry2.SQL.Add('SHOW CREATE FUNCTION ' + routineName);
+      qry2.Execute;
+      createSQL := qry2.FieldByName('Create Function').AsString;
+      qry2.Free;
       paramRecs := GetRoutineParameters(createSQL, True);
       functionParams := '';
       sqlParams := '';
@@ -942,16 +946,14 @@ begin
       implementationCode := implementationCode + '*}' + CRLF;
       implementationCode := implementationCode + 'class function TStoredRoutines.' + delphiRoutineName + '(' + functionParams + '): ' + delphiReturnType + ';' + CRLF;
       implementationCode := implementationCode + 'var' + CRLF;
-      implementationCode := implementationCode + TAB + 'ds: TClientDataSet;' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry: TTBGQuery;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry: TTbgQuery;' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry := TTBGQuery.Create;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.SQL.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
       for paramRec in paramRecs do
         implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
-      implementationCode := implementationCode + TAB + 'ds := TQueryExecutor.Execute(qry);' + CRLF;
-      implementationCode := implementationCode + TAB + 'Result := ds.FieldByName(''value'').Value;' + CRLF;
-      implementationCode := implementationCode + TAB + 'ds.Free;' + CRLF;
+      implementationCode := implementationCode + TAB + 'qry.Execute;' + CRLF;
+      implementationCode := implementationCode + TAB + 'Result := qry.FieldByName(''value'').Value;' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
@@ -968,36 +970,37 @@ begin
     template.Free;
     WriteLn(' done.');
   end;
-  ds.Free;
+  qry.Free;
 {$IFNDEF CONSOLE}
   FreeConsole;
 {$ENDIF}
 end;
 
-function TGenerator.GetFields(const TableName: string): TClientDataSet;
+function TGenerator.GetFields(const TableName: string): TTbgQuery;
 var
-  qry: TTBGQuery;
+  qry: TTbgQuery;
 begin
-  qry := TTBGQuery.Create;
+  qry := TTbgQuery.Create(nil);
   qry.SQL.Add('DESC ' + TableName);
-  Result := TQueryExecutor.Execute(qry);
-  qry.Free;
+  qry.Execute;
+  Result := qry;
 end;
 
 function TGenerator.GetIndices(const TableName: string): TStringList;
 var
-  ds: TClientDataSet;
   indices: TStringList;
+  qry: TTbgQuery;
 begin
   indices := TStringList.Create;
-	ds := GetFields(TableName);
-  with (ds) do
+	qry := GetFields(TableName);
+  with (qry) do
   while (not Eof) do
   begin
-    if (ds.FieldByName('Key').AsString <> '') then
-      indices.Add(ds.FieldByName('Field').AsString);
+    if (qry.FieldByName('Key').AsString <> '') then
+      indices.Add(qry.FieldByName('Field').AsString);
     Next;
   end;
+  qry.Free;
   Result := indices;
 end;
 
@@ -1064,25 +1067,20 @@ begin
 	CreateDir(FOutputPath + DTO_PATH);
 	CreateDir(FOutputPath + DTO_EXT_PATH);
 	CreateDir(FOutputPath + SQL_PATH);
+	CreateDir(FOutputPath + SQL_EXT_PATH);
 {$IFDEF GenerateInterfaces}
   CreateDir(FOutputPath + INTERFACES_PATH);
   CreateDir(FOutputPath + IDAO_PATH);
 {$ENDIF}
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_CORE_PATH + 'ArrayList.pas'), PChar(FOutputPath + CORE_PATH + 'ArrayList.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'Connection.pas'), PChar(FOutputPath + SQL_PATH + 'Connection.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'ConnectionFactory.pas'), PChar(FOutputPath + SQL_PATH + 'ConnectionFactory.pas'), False);
-  // do not overwrite connection properties if they already exist
-  if (not FileExists(FOutputPath + SQL_PATH + 'ConnectionProperty.pas')) then
-    CopyFile(PChar(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'ConnectionProperty.tpl'), PChar(FOutputPath + SQL_PATH + 'ConnectionProperty.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'Query.pas'), PChar(FOutputPath + SQL_PATH + 'Query.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'QueryExecutor.pas'), PChar(FOutputPath + SQL_PATH + 'QueryExecutor.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'QueryFactory.pas'), PChar(FOutputPath + SQL_PATH + 'QueryFactory.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_PATH + 'Configuration.pas'), PChar(FOutputPath + CLASSES_PATH + 'Configuration.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'ConnectionProperty.tpl'), PChar(FOutputPath + SQL_PATH + 'ConnectionProperty.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLComparisonOperator.pas'), PChar(FOutputPath + SQL_PATH + 'SQLComparisonOperator.pas'), False);
   CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'SQLOrderDirection.pas'), PChar(FOutputPath + SQL_PATH + 'SQLOrderDirection.pas'), False);
-  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'Transaction.pas'), PChar(FOutputPath + SQL_PATH + 'Transaction.pas'), False);
-  // do not overwrite connection extension if it already exists
-  if (not FileExists(FOutputPath + SQL_EXT_PATH + 'ConnectionExt.pas')) then
-    CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_EXT_PATH + 'ConnectionExt.pas'), PChar(FOutputPath + SQL_EXT_PATH + 'ConnectionExt.pas'), False);
+  CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_PATH + 'TbgQuery.pas'), PChar(FOutputPath + SQL_PATH + 'TbgQuery.pas'), False);
+  // do not overwrite connection property extension if it already exists
+  if (not FileExists(FOutputPath + SQL_EXT_PATH + 'ConnectionPropertyExt.pas')) then
+    CopyFile(PChar(FSourceProjectPath + SOURCE_CLASSES_SQL_EXT_PATH + 'ConnectionPropertyExt.pas'), PChar(FOutputPath + SQL_EXT_PATH + 'ConnectionPropertyExt.pas'), False);
 end;
 
 end.

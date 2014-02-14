@@ -6,13 +6,10 @@ interface
 uses
 ${uses_list}
   ConnectionExt,
-  DB,
-  DBClient,
   Generics.Collections,
-  Query,
-  QueryExecutor,
   SQLComparisonOperator,
-  SQLOrderDirection;
+  SQLOrderDirection,
+  TbgQuery;
 
 type
   {**
@@ -26,14 +23,12 @@ type
     const INDEX_FIELD_MAP: ${mapping_array};
     var FConnection: TConnectionExt;
   protected
-    function ReadRow(const AClientDataSet: TClientDataSet): ${dao_class_name}; 
-    function GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
-    function GetRow(var AQuery: TTBGQuery): ${dao_class_name};
-    function Execute(var AQuery: TTBGQuery): TClientDataSet;
-    function QuerySingleResult(var AQuery: TTBGQuery): string;
+    function ReadRow(const AQuery: TTbgQuery): ${dao_class_name};
+    function GetList(var AQuery: TTbgQuery): TObjectList<${dao_class_name}>;
+    function GetRow(var AQuery: TTbgQuery): ${dao_class_name};
   public
 ${index_constants}
-    constructor Create(aConnection: TConnectionExt);
+    constructor Create(AConnection: TConnectionExt);
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
@@ -42,9 +37,9 @@ ${query_by_definitions}
 
 implementation
 
-constructor ${type_name}.Create(aConnection: TConnectionExt);
+constructor ${type_name}.Create(AConnection: TConnectionExt);
 begin
-  FConnection := aConnection;
+  FConnection := AConnection;
 end;
 
 {**
@@ -55,11 +50,11 @@ end;
  *}
 function ${type_name}.Load(const Id: Variant): ${dao_class_name};
 var
-  qry: TTBGQuery;
+  qry: TTbgQuery;
 begin
-  qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name} WHERE ${pk} = :${pk}');
-  qry.paramByName('${pk}').Value := Id;
+  qry := TTbgQuery.Create(nil);
+  qry.SQL.Add('SELECT * FROM ${table_name} WHERE ${pk} = :${pk}');
+  qry.ParamByName('${pk}').Value := Id;
   Result := GetRow(qry);
   qry.Free;
 end;
@@ -69,10 +64,10 @@ end;
  *}
 function ${type_name}.QueryAll: TObjectList<${dao_class_name}>;
 var
-  qry: TTBGQuery;
+  qry: TTbgQuery;
 begin
-  qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name}');
+  qry := TTbgQuery.Create(nil);
+  qry.SQL.Add('SELECT * FROM ${table_name}');
   Result := GetList(qry);
   qry.Free;
 end;
@@ -84,10 +79,10 @@ end;
  *}
 function ${type_name}.QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
 var
-  qry: TTBGQuery;
+  qry: TTbgQuery;
 begin
-  qry := TTBGQuery.Create;
-  qry.sql.Add('SELECT * FROM ${table_name} ORDER BY ' + OrderColumn);
+  qry := TTbgQuery.Create(nil);
+  qry.SQL.Add('SELECT * FROM ${table_name} ORDER BY ' + OrderColumn);
   Result := GetList(qry);
   qry.Free;
 end;
@@ -99,33 +94,31 @@ ${query_by_functions}
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.ReadRow(const AClientDataSet: TClientDataSet): ${dao_class_name};
+function ${type_name}.ReadRow(const AQuery: TTbgQuery): ${dao_class_name};
 var
   ${var_name}: ${dao_class_name};
 begin
   ${var_name} := ${dao_class_name}.Create;
-  if (not AClientDataset.IsEmpty) then
+  if (not AQuery.IsEmpty) then
   begin
 ${read_row}
   end;
   Result := ${var_name};
 end;
 	
-function ${type_name}.GetList(var AQuery: TTBGQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var AQuery: TTbgQuery): TObjectList<${dao_class_name}>;
 var
-  aClientDataSet: TClientDataSet;
   ${var_name}s: TObjectList<${dao_class_name}>;
 begin
-  aClientDataSet := TQueryExecutor.Execute(AQuery, FConnection);
+  AQuery.Execute;
   ${var_name}s := TObjectList<${dao_class_name}>.Create;
   ${var_name}s.OwnsObjects := True;
-  while (not aClientDataSet.Eof) do
+  while (not AQuery.Eof) do
   begin
-    ${var_name}s.Add(ReadRow(aClientDataSet));
-    aClientDataSet.Next;
+    ${var_name}s.Add(ReadRow(AQuery));
+    AQuery.Next;
   end;
   Result := ${var_name}s;  
-  aClientDataSet.Free;
 end;
 	
 {**
@@ -133,29 +126,10 @@ end;
  *
  * @return ${dao_class_name}
  *}
-function ${type_name}.GetRow(var AQuery: TTBGQuery): ${dao_class_name};
-var
-  aClientDataSet: TClientDataSet;
+function ${type_name}.GetRow(var AQuery: TTbgQuery): ${dao_class_name};
 begin
-  aClientDataSet := TQueryExecutor.Execute(AQuery, FConnection);
-  Result := ReadRow(aClientDataSet);
-  aClientDataSet.Free;
-end; 
-	
-{**
- * Execute sql query
- *}
-function ${type_name}.Execute(var AQuery: TTBGQuery): TClientDataSet;
-begin
-  Result := TQueryExecutor.Execute(AQuery, FConnection);
-end; 
-
-{**
- * Query for one row and one column
- *}
-function ${type_name}.QuerySingleResult(var AQuery: TTBGQuery): string;
-begin
-  Result := TQueryExecutor.queryForString(AQuery, FConnection);
-end; 
+  AQuery.Execute;
+  Result := ReadRow(AQuery);
+end;
 
 end.
