@@ -17,7 +17,7 @@ type
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure OpenDBConnection(AUserName, APassword: string);
+    procedure OpenDBConnection;
   end;
 
 var
@@ -55,7 +55,7 @@ begin
   DBConnection := nil;
 end;
 
-procedure TDatabaseDataModule.OpenDBConnection(AUserName, APassword: string);
+procedure TDatabaseDataModule.OpenDBConnection;
 begin
   with (DBConnection) do
   begin

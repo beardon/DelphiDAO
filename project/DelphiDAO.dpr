@@ -49,6 +49,8 @@ end;
 
 begin
   ProcessParameters;
+  Application.CreateForm(TDatabaseDataModule, DatabaseDataModule);
+  DatabaseDataModule.OpenDBConnection;
   generator := TGenerator.Create;
   try
     generator.Generate(outputPath, projectPath);
