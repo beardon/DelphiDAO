@@ -5,7 +5,6 @@ interface
 
 uses
 ${uses_list}
-  ConnectionExt,
   Generics.Collections,
   SQLComparisonOperator,
   SQLOrderDirection;
@@ -20,14 +19,12 @@ type
   ${type_name} = class(TInterfacedObject, ${interface_name})
   private
     const INDEX_FIELD_MAP: ${mapping_array};
-    var FConnection: TConnectionExt;
   protected
     function ReadRow(const AQuery: TTbgQuery): ${dao_class_name};
     function GetList(var AQuery: TTbgQuery): TObjectList<${dao_class_name}>;
     function GetRow(var AQuery: TTbgQuery): ${dao_class_name};
   public
 ${index_constants}
-    constructor Create(AConnection: TConnectionExt);
     function Load(const Id: Variant): ${dao_class_name};
     function QueryAll: TObjectList<${dao_class_name}>;
     function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
@@ -35,11 +32,6 @@ ${query_by_definitions}
   end;
 
 implementation
-
-constructor ${type_name}.Create(AConnection: TConnectionExt);
-begin
-  FConnection := AConnection;
-end;
 
 {**
  * Get Domain object by primary key

@@ -29,10 +29,10 @@ uses
 
 const
   CRLF = #13#10;
-  hash_header = 'SHA1_HASH';
-  hash_separator = ':';
+  HASH_HEADER = 'SHA1_HASH';
+  HASH_SEPARATOR = ':';
   // Match Greedy until you find the hash_header plus sep, then pull one or more non-whitespace character out
-  reg_ex_string = hash_header + hash_separator + '(\S+)';
+  REX_EX_STRING = HASH_HEADER + HASH_SEPARATOR + '(\S+)';
 
 
 
@@ -83,7 +83,7 @@ begin
     // Erase existing file and copy new content
     ReWrite(handle);
     if(update_file) then
-      FContent := ' { ' + hash_header + hash_separator + hash + ' } ' + CRLF + FContent;
+      FContent := ' { ' + HASH_HEADER + HASH_SEPARATOR + hash + ' } ' + CRLF + FContent;
     WriteLn(handle, FContent);
     CloseFile(handle);
   end
@@ -93,7 +93,7 @@ begin
     // Erase existing file and copy new content
     ReWrite(handle);
     if(update_file) then
-      FContent := ' { ' + hash_header + hash_separator + hash + ' } ' + CRLF + FContent;
+      FContent := ' { ' + HASH_HEADER + HASH_SEPARATOR + hash + ' } ' + CRLF + FContent;
     WriteLn(handle, FContent);
     CloseFile(handle);
   end;
@@ -116,7 +116,7 @@ begin
     ReadLn(handle, buffer);
     Close(handle);
 
-    reg_ex := TRegEx.Create(reg_ex_string, [roIgnoreCase]);
+    reg_ex := TRegEx.Create(REX_EX_STRING, [roIgnoreCase]);
     match := reg_ex.Match(buffer);
 
     // Did it match, does the match have valid data (0 is the entire string I think?, and is the string identical to our hash

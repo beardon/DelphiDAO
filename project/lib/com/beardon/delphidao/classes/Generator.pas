@@ -325,7 +325,7 @@ begin
       functionDeclarations := functionDeclarations + TAB2 + 'class function Get' + tableDAOName + ': ' + typeName + ';' + CRLF;
       implementationCode := implementationCode + 'class function TDAOFactory.Get' + tableDAOName + ': ' + typeName + ';' + CRLF;
       implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'Result := ' + typeName + '.Create(FConnection);' + CRLF;
+      implementationCode := implementationCode + TAB + 'Result := ' + typeName + '.Create;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
       implementationCode := implementationCode + CRLF;
       Next;
