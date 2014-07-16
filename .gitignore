@@ -1,0 +1,12 @@
+*.dcu
+*.exe
+*.identcache
+*.local
+*.~*
+*.~dsk
+*.~ra
+__history
+output
+*.tvsconfig
+*.dsk
+dcu
