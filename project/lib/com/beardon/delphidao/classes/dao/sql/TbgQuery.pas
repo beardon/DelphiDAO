@@ -35,8 +35,10 @@ end;
 
 procedure TTbgQuery.Execute;
 begin
-  if (Connection.Connected) then
+  try
     inherited Execute;
+  except
+  end;
 end;
 
 procedure TTbgQuery.Initialize;
