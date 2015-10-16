@@ -17,7 +17,8 @@ uses
   HashLib in 'lib\com\beardon\delphidao\libraries\HashLib.pas',
   TbgQuery in 'lib\com\beardon\delphidao\classes\dao\sql\TbgQuery.pas',
   DatabaseDM in 'lib\com\beardon\delphidao\data_modules\DatabaseDM.pas' {DatabaseDataModule: TDataModule},
-  Configuration in 'lib\com\beardon\delphidao\Configuration.pas';
+  Configuration in 'lib\com\beardon\delphidao\Configuration.pas',
+  ConfigLib in 'lib\com\beardon\delphidao\libraries\ConfigLib.pas';
 
 var
   generator: TGenerator;
@@ -26,7 +27,7 @@ var
 
 procedure ProcessParameters;
 const
-  DEFAULT_PROJECT_PATH = '..\..\..\..\project\';
+  DEFAULT_PROJECT_PATH = '..\..\..\..\';
   OUTPUT_PATH_PARAM = '-o';
   TEMPLATE_PATH_PARAM = '-t';
 var

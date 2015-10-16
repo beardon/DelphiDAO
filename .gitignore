@@ -56,3 +56,7 @@ __history/
 # Beardon standard output directories
 output/
 dcu/
+
+# Intellij
+.idea
+*.iml

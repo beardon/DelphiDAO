@@ -10,6 +10,9 @@ const
   DB_PASSWORD = 'password';
   DB_SCHEMA = 'schema';
 
+  // File constants
+  CONFIG_INI_FILENAME = 'config.ini';
+
 implementation
 
 end.
