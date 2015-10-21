@@ -13,16 +13,16 @@ type
     { Private declarations }
     FConnectionRetryCount: Integer;
     procedure CloseDBConnection;
-    function GetDatabaseHost: string;
-    function GetDatabasePassword: string;
-    function GetDatabasePort: Integer;
-    function GetDatabaseSchema: string;
-    function GetDatabaseUsername: string;
+    function GetDatabaseHost(ConfigPath: string): string;
+    function GetDatabasePassword(ConfigPath: string): string;
+    function GetDatabasePort(ConfigPath: string): Integer;
+    function GetDatabaseSchema(ConfigPath: string): string;
+    function GetDatabaseUsername(ConfigPath: string): string;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure OpenDBConnection;
+    procedure OpenDBConnection(ConfigPath: string);
   end;
 
 var
@@ -61,41 +61,41 @@ begin
   DBConnection := nil;
 end;
 
-function TDatabaseDataModule.GetDatabaseHost: string;
+function TDatabaseDataModule.GetDatabaseHost(ConfigPath: string): string;
 begin
-  Result := TConfigLib.ReadString('database', 'host', DB_HOST);
+  Result := TConfigLib.ReadString(ConfigPath, 'database', 'host', DB_HOST);
 end;
 
-function TDatabaseDataModule.GetDatabasePassword: string;
+function TDatabaseDataModule.GetDatabasePassword(ConfigPath: string): string;
 begin
-  Result := TConfigLib.ReadString('database', 'password', DB_PASSWORD);
+  Result := TConfigLib.ReadString(ConfigPath, 'database', 'password', DB_PASSWORD);
 end;
 
-function TDatabaseDataModule.GetDatabasePort: Integer;
+function TDatabaseDataModule.GetDatabasePort(ConfigPath: string): Integer;
 begin
-  Result := TConfigLib.ReadInteger('database', 'port', DB_PORT);
+  Result := TConfigLib.ReadInteger(ConfigPath, 'database', 'port', DB_PORT);
 end;
 
-function TDatabaseDataModule.GetDatabaseSchema: string;
+function TDatabaseDataModule.GetDatabaseSchema(ConfigPath: string): string;
 begin
-  Result := TConfigLib.ReadString('database', 'schema', DB_SCHEMA);
+  Result := TConfigLib.ReadString(ConfigPath, 'database', 'schema', DB_SCHEMA);
 end;
 
-function TDatabaseDataModule.GetDatabaseUsername: string;
+function TDatabaseDataModule.GetDatabaseUsername(ConfigPath: string): string;
 begin
-  Result := TConfigLib.ReadString('database', 'username', DB_USERNAME);
+  Result := TConfigLib.ReadString(ConfigPath, 'database', 'username', DB_USERNAME);
 end;
 
-procedure TDatabaseDataModule.OpenDBConnection;
+procedure TDatabaseDataModule.OpenDBConnection(ConfigPath: string);
 begin
   with (DBConnection) do
   begin
     LoginPrompt := False;
-    Server := GetDatabaseHost;
-    Port := GetDatabasePort;
-    Username := GetDatabaseUsername;
-    Password := GetDatabasePassword;
-    Database := GetDatabaseSchema;
+    Server := GetDatabaseHost(ConfigPath);
+    Port := GetDatabasePort(ConfigPath);
+    Username := GetDatabaseUsername(ConfigPath);
+    Password := GetDatabasePassword(ConfigPath);
+    Database := GetDatabaseSchema(ConfigPath);
     Connect;
     DataTypeMap.AddDBTypeRule(myIntUnsigned, ftLargeint); // MyDAC data mapping workaround
   end;

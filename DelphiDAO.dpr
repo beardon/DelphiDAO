@@ -22,11 +22,13 @@ uses
 
 var
   generator: TGenerator;
+  configPath: string;
   outputPath: string;
   projectPath: string;
 
 procedure ProcessParameters;
 const
+  CONFIG_PATH_PARAM = '-c';
   DEFAULT_PROJECT_PATH = '..\..\..\..\';
   OUTPUT_PATH_PARAM = '-o';
   TEMPLATE_PATH_PARAM = '-t';
@@ -35,11 +37,15 @@ var
 begin
   for i := 1 to ParamCount do
   begin
+    if (LeftStr(ParamStr(i), 2) = CONFIG_PATH_PARAM) then
+      configPath := Copy(ParamStr(i), 3, MaxInt);
     if (LeftStr(ParamStr(i), 2) = OUTPUT_PATH_PARAM) then
       outputPath := Copy(ParamStr(i), 3, MaxInt);
     if (LeftStr(ParamStr(i), 2) = TEMPLATE_PATH_PARAM) then
       projectPath := Copy(ParamStr(i), 3, MaxInt);
   end;
+  if (configPath = '') then
+    configPath := ExtractFilePath(Application.ExeName) + CONFIG_INI_FILENAME;
   if (outputPath = '') then
     outputPath := ExtractFilePath(Application.ExeName);
   if (projectPath = '') then
@@ -49,10 +55,10 @@ end;
 begin
   ProcessParameters;
   Application.CreateForm(TDatabaseDataModule, DatabaseDataModule);
-  DatabaseDataModule.OpenDBConnection;
+  DatabaseDataModule.OpenDBConnection(configPath);
   generator := TGenerator.Create;
   try
-    generator.Generate(outputPath, projectPath);
+    generator.Generate(DatabaseDataModule.DBConnection.Database, outputPath, projectPath);
     { TODO -oUser -cConsole Main : Insert code here }
   except
     on E: Exception do

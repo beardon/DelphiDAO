@@ -8,10 +8,10 @@ uses
 type
   TConfigLib = class
   private
-    class function GetIniFile: TIniFile;
+    class function GetIniFile(Filename: string): TIniFile;
   public
-    class function ReadInteger(Section:string; Name: string; Default: Integer = 0): Integer;
-    class function ReadString(Section:string; Name: string; Default: string = ''): string;
+    class function ReadInteger(Filename, Section, Name: string; Default: Integer = 0): Integer;
+    class function ReadString(Filename, Section, Name: string; Default: string = ''): string;
   end;
 
 implementation
@@ -21,28 +21,33 @@ uses
   Forms,
   SysUtils;
 
-class function TConfigLib.GetIniFile: TIniFile;
+class function TConfigLib.GetIniFile(Filename: string): TIniFile;
 var
   appPath: string;
 begin
-  appPath := ExtractFilePath(Application.ExeName);
-  Result := TIniFile.Create(appPath + CONFIG_INI_FILENAME);
+  if (Filename = '') then
+  begin
+    appPath := ExtractFilePath(Application.ExeName);
+    Result := TIniFile.Create(appPath + CONFIG_INI_FILENAME);
+  end
+  else
+    Result := TIniFile.Create(Filename);
 end;
 
-class function TConfigLib.ReadInteger(Section: string; Name: string; Default: Integer = 0): Integer;
+class function TConfigLib.ReadInteger(Filename, Section, Name: string; Default: Integer = 0): Integer;
 var
   ini: TIniFile;
 begin
-  ini := GetIniFile;
+  ini := GetIniFile(Filename);
   Result := ini.ReadInteger(Section, Name, Default);
   ini.Free;
 end;
 
-class function TConfigLib.ReadString(Section: string; Name: string; Default: string = ''): string;
+class function TConfigLib.ReadString(Filename, Section, Name: string; Default: string = ''): string;
 var
   ini: TIniFile;
 begin
-  ini := GetIniFile;
+  ini := GetIniFile(Filename);
   Result := ini.ReadString(Section, Name, Default);
   ini.Free;
 end;

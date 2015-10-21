@@ -21,8 +21,8 @@ type
   private
     FOutputPath: string;
     FTablesQuery: TTbgQuery;
+    FSchema: string;
     FSourceProjectPath: string;
-    procedure CleanDirectory(Path: string);
     function CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
     function CreateDeleteByFunction(const TableName, FieldName, DelphiType: string): string;
     function CreateQueryByDefinitions(const TableName, FieldMemberName, DelphiType: string; const ShowDefaults: Boolean; const PrimaryKeyIndex: string = ''): string;
@@ -43,7 +43,7 @@ type
     function GetRoutineReturnType(const CreateSQL: string): string;
     procedure Initialize;
   public
-    procedure Generate(OutputPath: string; SourceProjectPath: string);
+    procedure Generate(Schema, OutputPath, SourceProjectPath: string);
   end;
 
 implementation
@@ -76,17 +76,6 @@ const
   CRLF2 = CRLF + CRLF;
   TAB = '  ';
   TAB2 = TAB + TAB;
-
-procedure TGenerator.CleanDirectory(Path: string);
-var
-  fileInfo: TSearchRec;
-begin
-  FindFirst(Path + '\*.pas', faAnyFile, fileInfo);
-  SysUtils.DeleteFile(Path + fileInfo.Name);
-  while (FindNext(fileInfo) = 0) do
-    SysUtils.DeleteFile(Path + fileInfo.Name);
-  SysUtils.FindClose(fileInfo);
-end;
 
 function TGenerator.CreateDeleteByDefinition(const FieldName, DelphiType: string): string;
 var
@@ -221,8 +210,9 @@ begin
   Result := success;
 end;
 
-procedure TGenerator.Generate(OutputPath: string; SourceProjectPath: string);
+procedure TGenerator.Generate(Schema, OutputPath, SourceProjectPath: string);
 begin
+  FSchema := Schema;
   FOutputPath := OutputPath;
   FSourceProjectPath := SourceProjectPath;
   Initialize;
@@ -260,7 +250,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
+      tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
@@ -314,7 +304,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
+      tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
@@ -392,7 +382,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
+      tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDAOName := tableClassBase + 'DAO';
       tableDAOInterfaceName := 'I' + tableDAOName;
@@ -567,7 +557,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
+      tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDTOName := tableClassBase + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
@@ -632,7 +622,7 @@ begin
     First;
     while (not Eof) do
     begin
-      tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
+      tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDTOName := tableBaseClass + 'DTO';
       Write('Generating ' + '"' + FOutputPath + DTO_PATH + tableDTOName + '.pas"...');
@@ -843,7 +833,7 @@ begin
 {$ENDIF}
   Write('Generating ' + '"' + FOutputPath + CLASSES_PATH + 'StoredRoutines.pas"...');
   qry := TTbgQuery.Create(nil);
-  qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + DB_SCHEMA + '"');
+  qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + FSchema + '"');
   qry.Execute;
   with (qry) do
   if (not IsEmpty) then
@@ -901,7 +891,7 @@ begin
   end;
   qry.Free;
   qry := TTbgQuery.Create(nil);
-  qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + DB_SCHEMA + '"');
+  qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + FSchema + '"');
   qry.Execute;
   with (qry) do
   if (not IsEmpty) then
