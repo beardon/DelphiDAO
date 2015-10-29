@@ -5,7 +5,6 @@ interface
 
 uses
 ${uses_list}
-  Generics.Collections,
   SQLComparisonOperator,
   SQLOrderDirection;
 
@@ -21,13 +20,13 @@ type
     const INDEX_FIELD_MAP: ${mapping_array};
   protected
     function ReadRow(const AQuery: TTbgQuery): ${dao_class_name};
-    function GetList(var AQuery: TTbgQuery): TObjectList<${dao_class_name}>;
+    function GetList(var AQuery: TTbgQuery): ${dao_list_class_name};
     function GetRow(var AQuery: TTbgQuery): ${dao_class_name};
   public
 ${index_constants}
     function Load(const Id: Variant): ${dao_class_name};
-    function QueryAll: TObjectList<${dao_class_name}>;
-    function QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
+    function QueryAll: ${dao_list_class_name};
+    function QueryAllOrderBy(const OrderColumn: string): ${dao_list_class_name};
 ${query_by_definitions}
   end;
 
@@ -56,7 +55,7 @@ end;
 {**
  * Get all records from view
  *}
-function ${type_name}.QueryAll: TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAll: ${dao_list_class_name};
 var
   qry: TTbgQuery;
 begin
@@ -71,7 +70,7 @@ end;
  *
  * @param orderColumn column name
  *}
-function ${type_name}.QueryAllOrderBy(const OrderColumn: string): TObjectList<${dao_class_name}>;
+function ${type_name}.QueryAllOrderBy(const OrderColumn: string): ${dao_list_class_name};
 var
   qry: TTbgQuery;
 begin
@@ -100,12 +99,12 @@ ${read_row}
   Result := ${var_name};
 end;
 	
-function ${type_name}.GetList(var AQuery: TTbgQuery): TObjectList<${dao_class_name}>;
+function ${type_name}.GetList(var AQuery: TTbgQuery): ${dao_list_class_name};
 var
-  ${var_name}s: TObjectList<${dao_class_name}>;
+  ${var_name}s: ${dao_list_class_name};
 begin
   AQuery.Execute;
-  ${var_name}s := TObjectList<${dao_class_name}>.Create;
+  ${var_name}s := ${dao_list_class_name}.Create;
   ${var_name}s.OwnsObjects := True;
   while (not AQuery.Eof) do
   begin

@@ -4,6 +4,7 @@ unit ${unit_name};
 interface
 
 uses
+  Generics.Collections,
 ${uses_list}
 
 type
@@ -18,6 +19,8 @@ type
   protected
   public
   end;
+
+  ${list_type_name} = TObjectList<${type_name}>;
 
 implementation
 

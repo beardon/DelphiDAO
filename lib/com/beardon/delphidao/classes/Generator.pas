@@ -122,10 +122,12 @@ var
   code: string;
   pkIndexConstant: string;
   tableBaseClass: string;
+  tableDTOExtListName: string;
   tableDTOExtName: string;
 begin
   tableBaseClass := TInflector.Classify(TableName);
   tableDTOExtName := tableBaseClass + 'DTOExt';
+  tableDTOExtListName := tableBaseClass + 'sDTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
   appendedComparisonOperatorDefault := '';
   appendedOrderClauseDefault := '';
@@ -138,9 +140,9 @@ begin
     appendedOrderIndexDefault := ' = ' + pkIndexConstant;
     appendedOrderDirectionDefault := ' = TSQLOrderDirection.ASCENDING';
   end;
-  code := TAB2 + 'function QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
-  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderClause: string' + appendedOrderClauseDefault + '): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
-  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderIndex: Integer' + appendedOrderIndexDefault + '; OrderDirection: Integer' + appendedOrderDirectionDefault + '): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := TAB2 + 'function QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '): T' + tableDTOExtListName + ';' + CRLF;
+  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderClause: string' + appendedOrderClauseDefault + '): T' + tableDTOExtListName + ';' + CRLF;
+  code := code + TAB2 + 'function QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer' + appendedComparisonOperatorDefault + '; const OrderIndex: Integer' + appendedOrderIndexDefault + '; OrderDirection: Integer' + appendedOrderDirectionDefault + '): T' + tableDTOExtListName + ';' + CRLF;
   Result := code;
 end;
 
@@ -151,17 +153,19 @@ var
   pkIndexConstant: string;
   tableBaseClass: string;
   tableDAOName: string;
+  tableDTOExtListName: string;
   tableDTOExtName: string;
 begin
   tableBaseClass := TInflector.Classify(TableName);
   tableDAOName := tableBaseClass + 'DAO';
   tableDTOExtName := tableBaseClass + 'DTOExt';
+  tableDTOExtListName := tableBaseClass + 'sDTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
-  code := 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): T' + tableDTOExtListName + ';' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'Result := QueryBy' + FieldMemberName + 'OrderByIndex(Value, ComparisonOperator, ' + pkIndexConstant + ', TSQLOrderDirection.ASCENDING);' + CRLF;
   code := code + 'end;' + CRLF2;
-  code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderBy(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderClause: string = ''''): T' + tableDTOExtListName + ';' + CRLF;
   code := code + 'var' + CRLF;
   code := code + TAB + 'qry: TTbgQuery;' + CRLF;
   code := code + 'begin' + CRLF;
@@ -182,7 +186,7 @@ begin
   code := code + TAB + 'Result := GetList(qry);' + CRLF;
   code := code + TAB + 'qry.Free;' + CRLF;
   code := code + 'end;' + CRLF2;
-  code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): TObjectList<T' + tableDTOExtName + '>;' + CRLF;
+  code := code + 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + 'OrderByIndex(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL; const OrderIndex: Integer = ' + pkIndexConstant + '; OrderDirection: Integer = TSQLOrderDirection.ASCENDING): T' + tableDTOExtListName + ';' + CRLF;
   code := code + 'begin' + CRLF;
   code := code + TAB + 'Result := QueryBy' + FieldMemberName + 'OrderBy(Value, ComparisonOperator, INDEX_FIELD_MAP[OrderIndex] + '' '' + TSQLOrderDirection.INDEX_DIRECTION_MAP[OrderDirection]);' + CRLF;
   code := code + 'end;' + CRLF2;
@@ -365,7 +369,9 @@ var
   tableClassBase: string;
   tableDAOInterfaceName: string;
   tableDAOName: string;
+  tableDTOExtListName: string;
   tableDTOExtName: string;
+  tableDTOListName: string;
   tableDTOName: string;
   tableDTOVariableName: string;
   tableName: string;
@@ -387,7 +393,9 @@ begin
       tableDAOName := tableClassBase + 'DAO';
       tableDAOInterfaceName := 'I' + tableDAOName;
       tableDTOName := tableClassBase + 'DTO';
+      tableDTOListName := tableClassBase + 's' + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
+      tableDTOExtListName := tableDTOListName + 'Ext';
       tableDTOVariableName := 'A' + tableDTOName;
       Write('Generating ' + '"' + FOutputPath + DAO_PATH + tableDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
@@ -481,6 +489,7 @@ begin
       end;
       indices.Free;
       template.SetPair('dao_class_name', 'T' + tableDTOExtName);
+      template.SetPair('dao_list_class_name', 'T' + tableDTOExtListName);
       template.SetPair('table_name', tableName);
       template.SetPair('var_name', tableDTOVariableName);
       indexConstants := LeftStr(indexConstants, Length(indexConstants) - 2);
@@ -540,9 +549,12 @@ end;
 procedure TGenerator.GenerateDTOExtObjects;
 var
   ancestorTypeName: string;
+  listTypeName: string;
   pointerTypeName: string;
   tableClassBase: string;
+  tableDTOExtListName: string;
   tableDTOExtName: string;
+  tableDTOListName: string;
   tableDTOName: string;
   tableName: string;
   template: TTemplate;
@@ -560,8 +572,11 @@ begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDTOName := tableClassBase + 'DTO';
+      tableDTOListName := tableClassBase + 's' + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
+      tableDTOExtListName := tableDTOListName + 'Ext';
       typeName := 'T' + tableDTOExtName;
+      listTypeName := 'T' + tableDTOExtListName;
       ancestorTypeName := 'T' + tableDTOName;
       pointerTypeName := 'P' + tableDTOExtName;
       usesList := TAB + tableDTOName + ';';
@@ -576,6 +591,7 @@ begin
         template.SetPair('type_name', typeName);
         template.SetPair('unit_name', tableDTOExtName);
         template.SetPair('uses_list', usesList);
+        template.SetPair('list_type_name', listTypeName);
         template.Write('' + FOutputPath + DTO_EXT_PATH + tableDTOExtName + '.pas');
         template.Free;
         WriteLn(' done.');
@@ -701,6 +717,7 @@ var
   tableClassBase: string;
   tableDAOName: string;
   tableDTOExtName: string;
+  tableDTOListExtName: string;
   tableDTOName: string;
   tableDTOVariableName: string;
   tableIDAOName: string;
@@ -722,7 +739,9 @@ begin
       tableDAOName := tableClassBase + 'DAO';
       tableIDAOName := tableDAOName + 'Interfaced';
       tableDTOName := tableClassBase + 'DTO';
+      tableDTOListName := tableClassBase + 's' + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
+      tableDTOExtListName := tableDTOListName + 'Ext';
       tableDTOVariableName := 'A' + tableDTOExtName;
       Write('Generating ' + '"' + FOutputPath + IDAO_PATH + tableIDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
@@ -778,6 +797,7 @@ begin
       if (Assigned(template)) then
       begin
         template.SetPair('dao_class_name', 'T' + tableDTOExtName);
+        template.SetPair('dao_list_class_name', 'T' + tableDTOExtListName);
         template.SetPair('table_name', tableName);
         template.SetPair('param_name', tableDTOVariableName);
         if (hasPK) then
