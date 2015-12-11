@@ -127,7 +127,7 @@ var
 begin
   tableBaseClass := TInflector.Classify(TableName);
   tableDTOExtName := tableBaseClass + 'DTOExt';
-  tableDTOExtListName := tableBaseClass + 'sDTOExt';
+  tableDTOExtListName := TInflector.Pluralize(tableBaseClass) + 'DTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
   appendedComparisonOperatorDefault := '';
   appendedOrderClauseDefault := '';
@@ -159,7 +159,7 @@ begin
   tableBaseClass := TInflector.Classify(TableName);
   tableDAOName := tableBaseClass + 'DAO';
   tableDTOExtName := tableBaseClass + 'DTOExt';
-  tableDTOExtListName := tableBaseClass + 'sDTOExt';
+  tableDTOExtListName := TInflector.Pluralize(tableBaseClass) + 'DTOExt';
   pkIndexConstant := 'INDEX_' + UpperCase(PrimaryKeyIndex);
   code := 'function T' + tableDAOName + '.QueryBy' + FieldMemberName + '(const Value: ' + DelphiType + '; const ComparisonOperator: Integer = TSQLComparisonOperator.EQUAL): T' + tableDTOExtListName + ';' + CRLF;
   code := code + 'begin' + CRLF;
@@ -393,7 +393,7 @@ begin
       tableDAOName := tableClassBase + 'DAO';
       tableDAOInterfaceName := 'I' + tableDAOName;
       tableDTOName := tableClassBase + 'DTO';
-      tableDTOListName := tableClassBase + 's' + 'DTO';
+      tableDTOListName := TInflector.Pluralize(tableClassBase) + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
       tableDTOExtListName := tableDTOListName + 'Ext';
       tableDTOVariableName := 'A' + tableDTOName;
@@ -572,7 +572,7 @@ begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableClassBase := TInflector.Classify(tableName);
       tableDTOName := tableClassBase + 'DTO';
-      tableDTOListName := tableClassBase + 's' + 'DTO';
+      tableDTOListName := TInflector.Pluralize(tableClassBase) + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
       tableDTOExtListName := tableDTOListName + 'Ext';
       typeName := 'T' + tableDTOExtName;
@@ -739,7 +739,7 @@ begin
       tableDAOName := tableClassBase + 'DAO';
       tableIDAOName := tableDAOName + 'Interfaced';
       tableDTOName := tableClassBase + 'DTO';
-      tableDTOListName := tableClassBase + 's' + 'DTO';
+      tableDTOListName := TInflector.Pluralize(tableClassBase) + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
       tableDTOExtListName := tableDTOListName + 'Ext';
       tableDTOVariableName := 'A' + tableDTOExtName;
