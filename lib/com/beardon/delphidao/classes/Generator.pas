@@ -133,7 +133,7 @@ begin
   appendedOrderClauseDefault := '';
   appendedOrderIndexDefault := '';
   appendedOrderDirectionDefault := '';
-  if (ShowDefaults) then
+  if ShowDefaults then
   begin
     appendedComparisonOperatorDefault := ' = TSQLComparisonOperator.EQUAL';
     appendedOrderClauseDefault := ' = ''''';
@@ -200,8 +200,8 @@ var
 begin
   success := False;
 	qry := GetFields(TableName);
-  with (qry) do
-  while (not Eof) do
+  with qry do
+  while not Eof do
   begin
     if (qry.FieldByName('Key').AsString = 'PRI') then
     begin
@@ -249,16 +249,16 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesQuery) do
+  with FTablesQuery do
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableBaseClass := TInflector.Classify(tableName);
       tableDAOName := tableBaseClass + 'DAO';
       tableDAOExtName := tableDAOName + 'Ext';
-      if (not FileExists('' + FOutputPath + DAO_EXT_PATH + tableDAOExtName + '.pas')) then
+      if not FileExists('' + FOutputPath + DAO_EXT_PATH + tableDAOExtName + '.pas') then
       begin
         Write('Generating ' + '"' + FOutputPath + DAO_EXT_PATH + tableDAOExtName + '.pas"...');
         usesList := TAB + tableDAOName + ';';
@@ -276,9 +276,7 @@ begin
         WriteLn(' done.');
       end
       else
-      begin
         WriteLn('"' + FOutputPath + DAO_EXT_PATH + tableDAOExtName + '.pas" already exists (extended classes are not overwritten).');
-      end;
       Next;
     end;
   end;
@@ -303,10 +301,10 @@ begin
   AllocConsole;
 {$ENDIF}
   Write('Generating ' + '"' + FOutputPath + DAO_PATH + 'DAOFactory.pas"...');
-  with (FTablesQuery) do
+  with FTablesQuery do
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableBaseClass := TInflector.Classify(tableName);
@@ -383,10 +381,10 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesQuery) do
+  with FTablesQuery do
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableClassBase := TInflector.Classify(tableName);
@@ -396,7 +394,7 @@ begin
       tableDTOListName := TInflector.Pluralize(tableClassBase) + 'DTO';
       tableDTOExtName := tableDTOName + 'Ext';
       tableDTOExtListName := tableDTOListName + 'Ext';
-      tableDTOVariableName := 'A' + tableDTOName;
+      tableDTOVariableName := 'a' + tableDTOName;
       Write('Generating ' + '"' + FOutputPath + DAO_PATH + tableDAOName + '.pas"...');
       hasPK := DoesTableContainPK(tableName);
       qry := GetFields(tableName);
@@ -417,8 +415,8 @@ begin
       readRow := CRLF;
       pkCount := 0;
       fieldMemberNames := TStringList.Create;
-      with (qry) do
-      while (not Eof) do
+      with qry do
+      while not Eof do
       begin
         fieldName := FieldByName('Field').AsString;
         fieldMemberName := TInflector.Memberify(fieldName);
@@ -452,13 +450,16 @@ begin
           queryByDef := queryByDef + CreateQueryByDefinitions(tableName, fieldMemberName, delphiType, True, firstIndex);
           queryByFunc := queryByFunc + CreateQueryByFunctions(tableName, fieldName, fieldMemberName, delphiType, firstIndex);
         end;
-        readRow := readRow + TAB2 + tableDTOVariableName + '.' + fieldMemberName + ' := AQuery.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
+        if TDelphinator.IsMySQLTypeBoolean(sqlType) then
+          readRow := readRow + TAB2 + tableDTOVariableName + '.' + fieldMemberName + ' := Boolean(AQuery.FieldByName(''' + fieldName + ''').' + asType + ');' + CRLF
+        else
+          readRow := readRow + TAB2 + tableDTOVariableName + '.' + fieldMemberName + ' := AQuery.FieldByName(''' + fieldName + ''').' + asType + ';' + CRLF;
         Next;
       end;
       fieldMemberNames.Free;
       qry.Free;
       template := nil;
-      if (hasPK) then
+      if hasPK then
       begin
         if (pkCount = 1) then
 {$IFDEF GenerateInterfaces}
@@ -500,7 +501,7 @@ begin
       deleteByDef := LeftStr(deleteByDef, Length(deleteByDef) - 2);
       deleteByFunc := LeftStr(deleteByFunc, Length(deleteByFunc) - 2);
       updateFields := LeftStr(updateFields, Length(updateFields) - 1);
-      if (hasPK) then
+      if hasPK then
       begin
         template.SetPair('pk', pk);
         insertFields := LeftStr(insertFields, Length(insertFields) - 1);
@@ -564,10 +565,10 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesQuery) do
+  with FTablesQuery do
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableClassBase := TInflector.Classify(tableName);
@@ -580,7 +581,7 @@ begin
       ancestorTypeName := 'T' + tableDTOName;
       pointerTypeName := 'P' + tableDTOExtName;
       usesList := TAB + tableDTOName + ';';
-      if (not FileExists('' + FOutputPath + DTO_EXT_PATH + tableDTOExtName + '.pas')) then
+      if not FileExists('' + FOutputPath + DTO_EXT_PATH + tableDTOExtName + '.pas') then
       begin
         Write('Generating ' + '"' + FOutputPath + DTO_EXT_PATH + tableDTOExtName + '.pas"...');
         template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'DTOExt.tpl', NO_UPDATE_FILES);
@@ -597,9 +598,7 @@ begin
         WriteLn(' done.');
       end
       else
-      begin
         WriteLn('"' + FOutputPath + DTO_EXT_PATH + tableDTOExtName + '.pas" already exists (extended classes are not overwritten).');
-      end;
       Next;
     end;
   end;
@@ -633,10 +632,10 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesQuery) do
+  with FTablesQuery do
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       tableName := FieldByName('Tables_in_' + FSchema).AsString;
       tableBaseClass := TInflector.Classify(tableName);
@@ -658,7 +657,7 @@ begin
       publicProperties := '';
       qry := GetFields(tableName);
       fieldMemberNames := TStringList.Create;
-      while (not qry.Eof) do
+      while not qry.Eof do
       begin
         fieldName := qry.FieldByName('Field').AsString;
         i := 1;
@@ -729,10 +728,10 @@ begin
 {$IFNDEF CONSOLE}
   AllocConsole;
 {$ENDIF}
-  with (FTablesQuery) do
+  with FTablesQuery do
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       tableName := FieldByName('Tables_in_' + DB_SCHEMA).AsString;
       tableClassBase := TInflector.Classify(tableName);
@@ -751,8 +750,8 @@ begin
       deleteByDef := '';
       fieldMemberNames := TStringList.Create;
       pkCount := 0;
-      with (qry) do
-      while (not Eof) do
+      with qry do
+      while not Eof do
       begin
         fieldName := FieldByName('Field').AsString;
         i := 1;
@@ -782,7 +781,7 @@ begin
       end;
       fieldMemberNames.Free;
       qry.Free;
-      if (hasPK) then
+      if hasPK then
       begin
         if (pkCount = 1) then
           template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'IDAO.tpl')
@@ -794,13 +793,13 @@ begin
       end
       else
         template := TTemplate.Create(FSourceProjectPath + SOURCE_TEMPLATES_PATH + 'IDAOView.tpl');
-      if (Assigned(template)) then
+      if Assigned(template) then
       begin
         template.SetPair('dao_class_name', 'T' + tableDTOExtName);
         template.SetPair('dao_list_class_name', 'T' + tableDTOExtListName);
         template.SetPair('table_name', tableName);
         template.SetPair('param_name', tableDTOVariableName);
-        if (hasPK) then
+        if hasPK then
         begin
           template.SetPair('pk', pk);
           deleteByDef := LeftStr(deleteByDef, Length(deleteByDef) - 2);
@@ -855,11 +854,11 @@ begin
   qry := TTbgQuery.Create(nil);
   qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + FSchema + '"');
   qry.Execute;
-  with (qry) do
-  if (not IsEmpty) then
+  with qry do
+  if not IsEmpty then
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       routineName := FieldByName('Name').AsString;
       delphiRoutineName := TInflector.Memberify(routineName);
@@ -898,9 +897,7 @@ begin
       implementationCode := implementationCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.SQL.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
       for paramRec in paramRecs do
-      begin
         implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
-      end;
       implementationCode := implementationCode + TAB + 'qry.Execute;' + CRLF;
       implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
       implementationCode := implementationCode + 'end;' + CRLF;
@@ -913,11 +910,11 @@ begin
   qry := TTbgQuery.Create(nil);
   qry.SQL.Add('SHOW FUNCTION STATUS WHERE Db = "' + FSchema + '"');
   qry.Execute;
-  with (qry) do
-  if (not IsEmpty) then
+  with qry do
+  if not IsEmpty then
   begin
     First;
-    while (not Eof) do
+    while not Eof do
     begin
       routineName := FieldByName('Name').AsString;
       delphiRoutineName := TInflector.Memberify(routineName);
@@ -1000,8 +997,8 @@ var
 begin
   indices := TStringList.Create;
 	qry := GetFields(TableName);
-  with (qry) do
-  while (not Eof) do
+  with qry do
+  while not Eof do
   begin
     if (qry.FieldByName('Key').AsString <> '') then
       indices.Add(qry.FieldByName('Field').AsString);
@@ -1034,7 +1031,7 @@ begin
     param := TStringList.Create;
     param.Delimiter := ' ';
     param.DelimitedText := params[i];
-    if (not IsFunction) then
+    if not IsFunction then
     begin
       paramRec.Direction := param[0];
       paramRec.VarName := param[1];

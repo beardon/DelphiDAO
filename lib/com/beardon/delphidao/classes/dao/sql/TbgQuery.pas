@@ -43,6 +43,7 @@ end;
 
 procedure TTbgQuery.Initialize;
 begin
+  Options.EnableBoolean := False;
   Connection := DatabaseDataModule.DBConnection;
   Close;
   SQL.Clear;

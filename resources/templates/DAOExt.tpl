@@ -1,4 +1,3 @@
-{ $Id$ }
 unit ${unit_name};
 
 interface

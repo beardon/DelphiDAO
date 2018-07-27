@@ -9,15 +9,15 @@ const
 type
   TTemplate = class
   private
+    FDoUpdateFile: Boolean;
     FTemplate: string;
     FContent: string;
     function GetContent: string;
-    var update_file : Boolean;
   public
-    constructor Create(const TemplateFilename: string; const Update_Check : Integer = UPDATE_FILES);
+    constructor Create(const TemplateFilename: string; const DoUpdateFiles : Integer = UPDATE_FILES);
     procedure SetPair(const Key, Value: string);
     procedure Write(const Filename: string);
-    function IsFileContentHashIdentical(const Filename, hash: string) : Boolean;
+    function IsFileContentHashIdentical(const Filename, Hash: string) : Boolean;
   end;
 
 implementation
@@ -34,15 +34,11 @@ const
   // Match Greedy until you find the hash_header plus sep, then pull one or more non-whitespace character out
   REX_EX_STRING = HASH_HEADER + HASH_SEPARATOR + '(\S+)';
 
-
-
-constructor TTemplate.Create(const TemplateFilename: string; const Update_check : Integer = UPDATE_FILES);
+constructor TTemplate.Create(const TemplateFilename: string; const DoUpdateFiles : Integer = UPDATE_FILES);
 begin
-  update_file := true;
-  if(Update_files = NO_UPDATE_FILES) then
-  begin
-    update_file := false;
-  end;
+  FDoUpdateFile := True;
+  if(DoUpdateFiles = NO_UPDATE_FILES) then
+    FDoUpdateFile := false;
   FTemplate := TemplateFilename;
   FContent := GetContent;
 end;
@@ -77,55 +73,50 @@ var
   hash : string;
 begin
   hash := CalcHash2(FContent, haSHA1);
-  if(not FileExists(Filename)) then
+  if not FileExists(Filename) then
   begin
     AssignFile(handle, Filename);
     // Erase existing file and copy new content
     ReWrite(handle);
-    if(update_file) then
-      FContent := ' { ' + HASH_HEADER + HASH_SEPARATOR + hash + ' } ' + CRLF + FContent;
+    if(FDoUpdateFile) then
+      FContent := '{ ' + HASH_HEADER + HASH_SEPARATOR + hash + ' } ' + CRLF + FContent;
     WriteLn(handle, FContent);
     CloseFile(handle);
   end
-  else  if (update_file AND (not IsFileContentHashIdentical(Filename, hash))) then
+  else if (FDoUpdateFile and not IsFileContentHashIdentical(Filename, hash)) then
   begin
     AssignFile(handle, Filename);
     // Erase existing file and copy new content
     ReWrite(handle);
-    if(update_file) then
-      FContent := ' { ' + HASH_HEADER + HASH_SEPARATOR + hash + ' } ' + CRLF + FContent;
+    if(FDoUpdateFile) then
+      FContent := '{ ' + HASH_HEADER + HASH_SEPARATOR + hash + ' } ' + CRLF + FContent;
     WriteLn(handle, FContent);
     CloseFile(handle);
   end;
 end;
 
-function TTemplate.IsFileContentHashIdentical(const Filename, hash : string) : Boolean;
+function TTemplate.IsFileContentHashIdentical(const Filename, Hash : string) : Boolean;
 var
+  buffer: string;
   handle: TextFile;
-  buffer : string;
-  reg_ex : TRegEx;
-  match : TMatch;
-  outcome : Boolean;
+  match: TMatch;
+  outcome: Boolean;
+  regEx: TRegEx;
 begin
-  outcome := false;
-  if(FileExists(filename)) then
+  outcome := False;
+  if FileExists(Filename) then
   begin
-    AssignFile(handle, filename);
+    AssignFile(handle, Filename);
     Reset(handle);
-   // First line should be the SHA1 hash of the generated file, so parse it out and compare
+    // First line should be the SHA1 hash of the generated file, so parse it out and compare
     ReadLn(handle, buffer);
     Close(handle);
-
-    reg_ex := TRegEx.Create(REX_EX_STRING, [roIgnoreCase]);
-    match := reg_ex.Match(buffer);
-
+    regEx := TRegEx.Create(REX_EX_STRING, [roIgnoreCase]);
+    match := regEx.Match(buffer);
     // Did it match, does the match have valid data (0 is the entire string I think?, and is the string identical to our hash
-    if ((match.Success) AND (match.Groups.Count > 0) AND (AnsiCompareText(match.Groups[1].Value, hash) = 0)) then
-    begin
-       outcome := true;
-    end;
+    if (match.Success and (match.Groups.Count > 0) and (AnsiCompareText(match.Groups[1].Value, Hash) = 0)) then
+      outcome := True;
   end;
-
   Result := outcome;
 end;
 

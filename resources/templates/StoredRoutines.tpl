@@ -1,4 +1,3 @@
-{ $Id$ }
 unit StoredRoutines;
 
 interface

@@ -1,4 +1,3 @@
-{ $Id$ }
 unit ${unit_name};
 
 interface
@@ -92,7 +91,7 @@ var
   ${var_name}: ${dao_class_name};
 begin
   ${var_name} := ${dao_class_name}.Create;
-  if (not AQuery.IsEmpty) then
+  if not AQuery.IsEmpty then
   begin
 ${read_row}
   end;
@@ -106,14 +105,14 @@ begin
   AQuery.Execute;
   ${var_name}s := ${dao_list_class_name}.Create;
   ${var_name}s.OwnsObjects := True;
-  while (not AQuery.Eof) do
+  while not AQuery.Eof do
   begin
     ${var_name}s.Add(ReadRow(AQuery));
     AQuery.Next;
   end;
   Result := ${var_name}s;  
 end;
-	
+
 {**
  * Get row
  *
