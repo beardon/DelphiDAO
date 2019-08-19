@@ -3,6 +3,11 @@ program DelphiDAO;
 {$APPTYPE CONSOLE}
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   StrUtils,
   SysUtils,
   Forms,

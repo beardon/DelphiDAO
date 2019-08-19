@@ -836,8 +836,9 @@ var
   createSQL: string;
   delphiReturnType: string;
   delphiRoutineName: string;
-  functionParams: string;
+  functionCode: string;
   functionDeclarations: string;
+  functionParams: string;
   implementationCode: string;
   paramRec : TRoutineParameter;
   paramRecs: TList<TRoutineParameter>;
@@ -851,6 +852,7 @@ begin
   AllocConsole;
 {$ENDIF}
   Write('Generating ' + '"' + FOutputPath + CLASSES_PATH + 'StoredRoutines.pas"...');
+  implementationCode := '';
   qry := TTbgQuery.Create(nil);
   qry.SQL.Add('SHOW PROCEDURE STATUS WHERE Db = "' + FSchema + '"');
   qry.Execute;
@@ -860,6 +862,7 @@ begin
     First;
     while not Eof do
     begin
+      functionCode := '';
       routineName := FieldByName('Name').AsString;
       delphiRoutineName := TInflector.Memberify(routineName);
       comment := FieldByName('Comment').AsString;
@@ -882,27 +885,28 @@ begin
         sqlParams := Copy(sqlParams, 1, Length(sqlParams) - 2);
       end;
       functionDeclarations := functionDeclarations + TAB2 + 'class procedure ' + delphiRoutineName + '(' + functionParams + ');' + CRLF;
-      implementationCode := implementationCode + '{**' + CRLF;
+      functionCode := functionCode + '{**' + CRLF;
       if (comment <> '') then
       begin
-        implementationCode := implementationCode + ' * ' + comment + CRLF;
-        implementationCode := implementationCode + ' *' + CRLF;
+        functionCode := functionCode + ' * ' + comment + CRLF;
+        functionCode := functionCode + ' *' + CRLF;
       end;
-      implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
-      implementationCode := implementationCode + '*}' + CRLF;
-      implementationCode := implementationCode + 'class procedure TStoredRoutines.' + delphiRoutineName + '(' + functionParams + ');' + CRLF;
-      implementationCode := implementationCode + 'var' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry: TTbgQuery;' + CRLF;
-      implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.SQL.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
+      functionCode := functionCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
+      functionCode := functionCode + '*}' + CRLF;
+      functionCode := functionCode + 'class procedure TStoredRoutines.' + delphiRoutineName + '(' + functionParams + ');' + CRLF;
+      functionCode := functionCode + 'var' + CRLF;
+      functionCode := functionCode + TAB + 'qry: TTbgQuery;' + CRLF;
+      functionCode := functionCode + 'begin' + CRLF;
+      functionCode := functionCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
+      functionCode := functionCode + TAB + 'qry.SQL.Add(''CALL ' + routineName + '(' + sqlParams + ')'');' + CRLF;
       for paramRec in paramRecs do
-        implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.Execute;' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
-      implementationCode := implementationCode + 'end;' + CRLF;
-      implementationCode := implementationCode + CRLF;
+        functionCode := functionCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
+      functionCode := functionCode + TAB + 'qry.Execute;' + CRLF;
+      functionCode := functionCode + TAB + 'qry.Free;' + CRLF;
+      functionCode := functionCode + 'end;' + CRLF;
+      functionCode := functionCode + CRLF;
       paramRecs.Free;
+      implementationCode := implementationCode + functionCode;
       Next;
     end;
   end;
@@ -916,6 +920,7 @@ begin
     First;
     while not Eof do
     begin
+      functionCode := '';
       routineName := FieldByName('Name').AsString;
       delphiRoutineName := TInflector.Memberify(routineName);
       qry2 := TTbgQuery.Create(nil);
@@ -939,29 +944,30 @@ begin
       sqlReturnType := GetRoutineReturnType(createSQL);
       delphiReturnType := TDelphinator.MySQLTypeToDelphiType(sqlReturnType, False);
       functionDeclarations := functionDeclarations + TAB2 + 'class function ' + delphiRoutineName + '(' + functionParams + '): ' + delphiReturnType + ';' + CRLF;
-      implementationCode := implementationCode + '{**' + CRLF;
+      functionCode := functionCode + '{**' + CRLF;
       if (comment <> '') then
       begin
-        implementationCode := implementationCode + ' * ' + comment + CRLF;
-        implementationCode := implementationCode + ' *' + CRLF;
+        functionCode := functionCode + ' * ' + comment + CRLF;
+        functionCode := functionCode + ' *' + CRLF;
       end;
-      implementationCode := implementationCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
-      implementationCode := implementationCode + ' * @return ' + delphiReturnType + CRLF;
-      implementationCode := implementationCode + '*}' + CRLF;
-      implementationCode := implementationCode + 'class function TStoredRoutines.' + delphiRoutineName + '(' + functionParams + '): ' + delphiReturnType + ';' + CRLF;
-      implementationCode := implementationCode + 'var' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry: TTbgQuery;' + CRLF;
-      implementationCode := implementationCode + 'begin' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.SQL.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
+      functionCode := functionCode + ' * @param ' + TDelphinator.MySQLTypeToDelphiType(paramRec.SQLType, False) + ' ' + TInflector.Memberify(paramRec.VarName) + CRLF;
+      functionCode := functionCode + ' * @return ' + delphiReturnType + CRLF;
+      functionCode := functionCode + '*}' + CRLF;
+      functionCode := functionCode + 'class function TStoredRoutines.' + delphiRoutineName + '(' + functionParams + '): ' + delphiReturnType + ';' + CRLF;
+      functionCode := functionCode + 'var' + CRLF;
+      functionCode := functionCode + TAB + 'qry: TTbgQuery;' + CRLF;
+      functionCode := functionCode + 'begin' + CRLF;
+      functionCode := functionCode + TAB + 'qry := TTbgQuery.Create(nil);' + CRLF;
+      functionCode := functionCode + TAB + 'qry.SQL.Add(''SELECT ' + routineName + '(' + sqlParams + ') AS value'');' + CRLF;
       for paramRec in paramRecs do
-        implementationCode := implementationCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.Execute;' + CRLF;
-      implementationCode := implementationCode + TAB + 'Result := qry.FieldByName(''value'').Value;' + CRLF;
-      implementationCode := implementationCode + TAB + 'qry.Free;' + CRLF;
-      implementationCode := implementationCode + 'end;' + CRLF;
-      implementationCode := implementationCode + CRLF;
+        functionCode := functionCode + TAB + 'qry.ParamByName(''' + paramRec.VarName + ''').Value := ' + TInflector.Memberify(paramRec.VarName) + ';' + CRLF;
+      functionCode := functionCode + TAB + 'qry.Execute;' + CRLF;
+      functionCode := functionCode + TAB + 'Result := qry.FieldByName(''value'').Value;' + CRLF;
+      functionCode := functionCode + TAB + 'qry.Free;' + CRLF;
+      functionCode := functionCode + 'end;' + CRLF;
+      functionCode := functionCode + CRLF;
       paramRecs.Free;
+      implementationCode := implementationCode + functionCode;
       Next;
     end;
     functionDeclarations := LeftStr(functionDeclarations, Length(functionDeclarations) - 2);
@@ -1009,15 +1015,26 @@ begin
 end;
 
 function TGenerator.GetRoutineParameters(const CreateSQL: string; const IsFunction: Boolean): TList<TRoutineParameter>;
+const
+  SUBSTRING_BEGIN = '(';
+  FUNCTION_SUBSTRING_END = 'RETURNS';
+  PROCEDURE_SUBSTRING_END = ')';
 var
+  beginPos: Integer;
+  endPos: Integer;
   i: Integer;
-  paramsStr: string;
-  params: TStringList;
   param: TStringList;
-  paramRec: TRoutineParameter;
   paramList: TList<TRoutineParameter>;
+  paramRec: TRoutineParameter;
+  params: TStringList;
+  paramsStr: string;
 begin
-  paramsStr := Copy(CreateSQL, Pos('(', CreateSQL) + 1, Pos(')', CreateSQL) - Pos('(', CreateSQL) - 1);
+  beginPos := Pos(SUBSTRING_BEGIN, Lowercase(CreateSQL)) + 1;
+  if IsFunction then
+    endPos := Pos(Lowercase(FUNCTION_SUBSTRING_END), Lowercase(CreateSQL)) - Pos(SUBSTRING_BEGIN, CreateSQL) - 3
+  else
+    endPos := Pos(PROCEDURE_SUBSTRING_END, CreateSQL) - Pos(SUBSTRING_BEGIN, CreateSQL) - 1;
+  paramsStr := Copy(CreateSQL, beginPos, endPos);
   paramsStr := Trim(paramsStr);
   paramsStr := StringReplace(paramsStr, #9, '', [rfReplaceAll]);
   paramsStr := StringReplace(paramsStr, #$A, '', [rfReplaceAll]);
@@ -1030,7 +1047,7 @@ begin
   begin
     param := TStringList.Create;
     param.Delimiter := ' ';
-    param.DelimitedText := params[i];
+    param.DelimitedText := Trim(params[i]);
     if not IsFunction then
     begin
       paramRec.Direction := param[0];

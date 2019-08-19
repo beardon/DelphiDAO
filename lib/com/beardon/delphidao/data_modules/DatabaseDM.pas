@@ -53,11 +53,7 @@ end;
 
 procedure TDatabaseDataModule.CloseDBConnection;
 begin
-  with (DBConnection) do
-  begin
-    Close;
-    Destroy;
-  end;
+  DBConnection.Close;
   DBConnection := nil;
 end;
 
@@ -88,7 +84,7 @@ end;
 
 procedure TDatabaseDataModule.OpenDBConnection(ConfigPath: string);
 begin
-  with (DBConnection) do
+  with DBConnection do
   begin
     LoginPrompt := False;
     Server := GetDatabaseHost(ConfigPath);
